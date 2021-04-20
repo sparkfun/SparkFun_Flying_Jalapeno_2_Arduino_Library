@@ -1,0 +1,77 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+FlyingJalapeno	KEYWORD1
+FlyingJalapeno2	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+FlyingJalapeno2	KEYWORD2
+reset	KEYWORD2
+userReset	KEYWORD2
+isPretestPressed	KEYWORD2
+isProgramAndTestPressed	KEYWORD2
+isButton1Pressed	KEYWORD2
+isTestPressed	KEYWORD2
+isButton2Pressed	KEYWORD2
+statOn	KEYWORD2
+statOff	KEYWORD2
+verifyVoltage	KEYWORD2
+verifyValue	KEYWORD2
+PreTest_Custom	KEYWORD2
+isV1Shorted	KEYWORD2
+isV2Shorted	KEYWORD2
+isShortToGround_Custom	KEYWORD2
+setVoltageV1	KEYWORD2
+setVoltageV2	KEYWORD2
+testVoltage	KEYWORD2
+testVCC	KEYWORD2
+enableV1	KEYWORD2
+disableV1	KEYWORD2
+enableV2	KEYWORD2
+disableV2	KEYWORD2
+dot	KEYWORD2
+dash	KEYWORD2
+SOS	KEYWORD2
+enableI2CBuffer	KEYWORD2
+disableI2CBuffer	KEYWORD2
+enableSerialBuffer	KEYWORD2
+disableSerialBuffer	KEYWORD2
+enableSPIBuffer	KEYWORD2
+disableSPIBuffer	KEYWORD2
+enableMicroSDBuffer	KEYWORD2
+disableMicroSDBuffer	KEYWORD2
+verifyI2Cdevice	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+FJ2_LED_PT_PASS	LITERAL1
+FJ2_LED_PRETEST_PASS	LITERAL1
+FJ2_LED_PROGRAM_AND_TEST_PASS	LITERAL1
+FJ2_LED_TEST_PASS	LITERAL1
+FJ2_LED_FAIL	LITERAL1
+FJ2_STAT_LED	LITERAL1
+FJ2_V1_CONTROL_TO_3V3	LITERAL1
+FJ2_V1_CONTROL_TO_5V0	LITERAL1
+FJ2_V2_CONTROL_TO_3V3	LITERAL1
+FJ2_V2_CONTROL_TO_3V7	LITERAL1
+FJ2_V2_CONTROL_TO_4V2	LITERAL1
+FJ2_V2_CONTROL_TO_5V0	LITERAL1
+FJ2_V1_POWER_CONTROL	LITERAL1
+FJ2_V2_POWER_CONTROL	LITERAL1
+FJ2_POWER_TEST_CONTROL	LITERAL1
+FJ2_PT_READ_V1	LITERAL1
+FJ2_PT_READ_V2	LITERAL1
+FJ2_CAP_SENSE_BUTTON_1	LITERAL1
+FJ2_CAP_SENSE_BUTTON_2	LITERAL1
+FJ2_CAP_SENSE_RETURN	LITERAL1
+FJ2_BRAIN_VCC_A0	LITERAL1
