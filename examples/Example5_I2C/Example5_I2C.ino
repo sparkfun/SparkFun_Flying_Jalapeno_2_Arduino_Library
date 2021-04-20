@@ -9,6 +9,8 @@
   Select Mega2560 from the boards list
 */
 
+#include <Wire.h>
+
 #include "SparkFun_Flying_Jalapeno_2_Arduino_Library.h" //Click here to get the library: http://librarymanager/All#SparkFun_Jalapeno_2
 
 //The FJ library depends on the CapSense library that can be obtained here: http://librarymanager/All#CapacitiveSensor_Arduino
@@ -21,6 +23,8 @@ void setup()
   Serial.println("I2C Enable Example");
 
   FJ2.enableI2CBuffer(); //Enable the I2C buffer
+
+  Wire.begin(); // Start Wire (verifyI2Cdevice will not do it for us, nor should it as it can lead to clock speed problems)
 
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
 

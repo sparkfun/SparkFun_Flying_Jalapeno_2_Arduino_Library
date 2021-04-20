@@ -103,7 +103,7 @@ class FlyingJalapeno2
     void setVoltageV1(float voltage); //Set V1 voltage (5 or 3.3V)
     void setVoltageV2(float voltage); //Set V2 voltage (3.3, 3.7, 4.2, or 5V)
 
-    boolean testVoltage(byte select); //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
+    boolean testVoltage(byte select, boolean debug = false); //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
 
     boolean testVCC(); //Test if the FJ2 VCC has been set correctly (using the 3.3V Zener diode on FJ2_BRAIN_VCC_A0)
 

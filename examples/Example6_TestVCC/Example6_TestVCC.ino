@@ -1,18 +1,8 @@
 /*
-  This example shows how to test if there are VCC to GND shorts on the target board.
+  This example shows how to test if the FJ2 VCC has been set correctly.
 
-  To do this we push a small current across a 10/100 resistor divider and look at the ADC value.
-  If ADC value is near 486 then there is a jumper.
-  If ADC value is far from 486, there is no jumper on the target board.
-  See FJ2 schematic 'PreTests' area to see the resistor and ADC setup.
-
-  Test for shorts on the two power supplies using:
-  isV1Shorted()
-  isV2Shorted()
-
-  Pete Lewis, started on 11/3/2016
-  Contributions by NES November 15th, 2016
-  Modified for FJ2 by Paul Clark, April 19th, 2021
+  Written by Paul Clark, April 20th, 2021
+  Based on earlier work by Pete Lewis and NES
 
   Select Mega2560 from the boards list
 */
@@ -26,7 +16,23 @@ FlyingJalapeno2 FJ2(FJ2_STAT_LED, 3.3); //Blink status msgs on STAT LED. Board s
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("Test for shorts");
+  Serial.println("Test VCC example");
+
+  //We told the FJ2 library that we expect VCC to be 3.3V when we instantiated FJ2
+  //We can check that VCC really is 3.3V by calling testVCC()
+  //testVCC() checks the VCC by reading the voltage of the 3.3V Zener diode on FJ2_BRAIN_VCC_A0
+  //testVCC() returns true if VCC is OK
+  
+  if(FJ2.testVCC() == false)
+  {
+    while(1) // Stay in this loop until reset
+    {
+      Serial.println("Whoa! VCC is wrong! Reset me when you have corrected VCC...");
+      FJ2.SOS(); // Blink SOS on STAT LED
+    }
+  }
+
+  Serial.println("VCC is OK!");
 
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
@@ -46,11 +52,12 @@ void setup()
   Serial.println("No shorts detected!");
 
   //Now power up the target
-  //FJ2.enableV1(); //Turn on V1
-  //FJ2.enableV2(); //Turn on V2
+  FJ2.enableV1(); //Turn on V1
+  FJ2.enableV2(); //Turn on V2
 }
 
 void loop()
 {
 
 }
+  

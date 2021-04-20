@@ -161,7 +161,28 @@ void FlyingJalapeno2::statOff()
   digitalWrite(_statLED, LOW);
 }	
 
-//Brief blink of chosen LED to indicate e.g. SOS
+//Blink SOS on chosen LED
+//https://en.wikipedia.org/wiki/Morse_code
+//The dot duration is the basic unit of time measurement in Morse code transmission.
+//The duration of a dash is three times the duration of a dot.
+//Each dot or dash within a character is followed by period of signal absence,
+//called a space, equal to the dot duration.
+//The letters of a word are separated by a space of duration equal to three dots,
+//and the words are separated by a space equal to seven dots.
+void FlyingJalapeno2::SOS(int pin)
+{
+  dot(pin);
+  dot(pin);
+  dot(pin);
+  dash(pin);
+  dash(pin);
+  dash(pin);
+  dot(pin);
+  dot(pin);
+  dot(pin);
+  delay(1750);
+}
+
 void FlyingJalapeno2::dot(int pin)
 {
   if (pin == -1) pin = _statLED;
@@ -175,24 +196,9 @@ void FlyingJalapeno2::dash(int pin)
 {
   if (pin == -1) pin = _statLED;
   digitalWrite(pin, HIGH);
-  delay(500);
+  delay(750);
   digitalWrite(pin, LOW);
-  delay(500);
-}
-
-//Blink SOS on chosen LED
-void FlyingJalapeno2::SOS(int pin)
-{
-  dot(pin);
-  dot(pin);
-  dot(pin);
-  dash(pin);
-  dash(pin);
-  dash(pin);
-  dot(pin);
-  dot(pin);
-  dot(pin);
-  delay(500);
+  delay(250);
 }
 
 // GENERIC PRE-TEST for shorts to GND on power rails, returns true if all is good, returns false if a short is detected
@@ -333,7 +339,7 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
 //Returns true if pin voltage is within a given window of the value we are looking for
 //pin = pin to test
 //expectedVoltage = voltage we expect. 0.0 to 5.0 (float)
-//allowedPpercent = allowed window for overage. 0 to 100 (int) (default 10%)
+//allowedPercent = allowed window for overage. 0 to 100 (int) (default 10%)
 //debug = print debug statements (default false)
 boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allowedPercent, boolean debug)
 {
@@ -504,7 +510,7 @@ void FlyingJalapeno2::setVoltageV2(float voltage)
 }
 
 //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
-boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
+boolean FlyingJalapeno2::testVoltage(byte select, boolean debug) // select is either "1" or "2"
 {
   //Specify the read_pin and expected voltage
   byte read_pin;
@@ -526,7 +532,7 @@ boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
   }
 
   //Verify the voltage is within 5%
-  return (verifyVoltage(read_pin, expectedVoltage, 5, true));
+  return (verifyVoltage(read_pin, expectedVoltage, 5, debug));
 }
 
 //Test if the FJ2 VCC has been set correctly (using the 3.3V Zener diode on FJ2_BRAIN_VCC_A0)

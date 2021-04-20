@@ -47,6 +47,6 @@ void loop()
     FJ2.disableV1(); //Turn off V1
     FJ2.enableV2(); //Turn on V2
     
-    FJ2.dash(FJ2_LED_PROGRAM_AND_TEST_PASS);
+    FJ2.dash(FJ2_LED_TEST_PASS);
   }
 }
