@@ -536,7 +536,6 @@ boolean FlyingJalapeno2::testVCC()
   //Check VCC by reading the 3.3V zener connected to A0
   //If VCC is 3.3V, the signal on A0 will be full range
   //If VCC is 5V, the signal on A0 will be (roughly) 3.3V/5V * 1023 = 675
-  //If analogRead returns less than 800, go into SOS mode
 
   int val = analogRead(FJ2_BRAIN_VCC_A0);
 
