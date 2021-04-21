@@ -86,6 +86,20 @@ class FlyingJalapeno2
     boolean isTestPressed(long threshold = 5000); //Returns true if cap sense button 2 is being pressed
     boolean isButton2Pressed(long threshold = 5000); //Helper function: calls isTestPressed
     
+    //Blocking wait-for-a-button-press functions
+    //These functions return:
+    //  0 if no button was pressed (and the function timed out)
+    //  1 if button 1 (PROGRAM_AND_TEST) was pressed
+    //  2 if button 2 (TEST) was pressed
+    //minimumHoldMillis acts as a debounce. The button must be held for at least this many millis to register as a press
+    //timeoutMillis defines the timeout for the function. The function will return zero after this many millis if the button was not pressed
+    //waitForButtonPress will return 1 or 2 if the button is held for at least minimumHoldMillis. 1 takes priority over 2 (if both are being pressed)
+    //waitForButtonPressRelease will return 1 or 2 after the button has been pressed and released for minimumReleaseMillis
+    //waitForButtonReleasePressRelease will only return 1 or 2 if neither button was pressed initially (when the function was called)
+    int waitForButtonPress(unsigned long timeoutMillis = 1000, unsigned long minimumHoldMillis = 100, unsigned long overrideStartMillis = 0);
+    int waitForButtonPressRelease(unsigned long timeoutMillis = 1000, unsigned long minimumHoldMillis = 100, unsigned long minimumReleaseMillis = 100, unsigned long overrideStartMillis = 0);
+    int waitForButtonReleasePressRelease(unsigned long timeoutMillis = 1000, unsigned long minimumPreReleaseMillis = 100, unsigned long minimumHoldMillis = 100, unsigned long minimumPostReleaseMillis = 100);
+
     void statOn(); //Turn the stat LED on
     void statOff();
 

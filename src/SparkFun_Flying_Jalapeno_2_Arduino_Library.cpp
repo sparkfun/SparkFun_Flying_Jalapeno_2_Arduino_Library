@@ -149,6 +149,245 @@ boolean FlyingJalapeno2::isTestPressed(long threshold)
   return(false);
 }
 
+//Blocking wait-for-a-button-press functions
+//These functions return:
+//  0 if no button was pressed (and the function timed out)
+//  1 if button 1 (PROGRAM_AND_TEST) was pressed
+//  2 if button 2 (TEST) was pressed
+//minimumHoldMillis acts as a debounce. The button must be held for at least this many millis to register as a press
+//timeoutMillis defines the timeout for the function. The function will return zero after this many millis if the button was not pressed
+//waitForButtonPress will return 1 or 2 if the button is held for at least minimumHoldMillis. 1 takes priority over 2 (if both are being pressed)
+//waitForButtonPressRelease will return 1 or 2 after the button has been pressed and released for minimumReleaseMillis
+//waitForButtonReleasePressRelease will only return 1 or 2 if neither button was pressed initially (when the function was called)
+int FlyingJalapeno2::waitForButtonPress(unsigned long timeoutMillis, unsigned long minimumHoldMillis, unsigned long overrideStartMillis)
+{
+  unsigned long startMillis; // Record millis when the function was called
+  if (overrideStartMillis > 0)
+  {
+    startMillis = overrideStartMillis;
+  }
+  else
+  {
+    startMillis = millis();
+  }
+  boolean keepGoing = true; // keepGoing if true
+  boolean timedOut = false; // Indicate if we timed out
+  int result = 0; // Return: 0 = no button; 1 = button 1; 2 = button 2
+  unsigned long latestButtonPress; // Record the time of the latest button press
+
+  while (keepGoing)
+  {
+    if (result == 0) //If we have not yet recorded a button press
+    {
+      if (isButton1Pressed()) // Check if button 1 is pressed. 1 takes priority over 2
+      {
+        latestButtonPress = millis(); // Record the time of the latest button press
+        result = 1; // Indicate button 1 is being pressed
+      }
+      else if (isButton2Pressed()) // Check if button 2 is pressed
+      {
+        latestButtonPress = millis(); // Record the time of the latest button press
+        result = 2; // Indicate button 2 is being pressed
+      }
+      else
+      {
+        // Neither button is pressed
+      }
+    }
+    else if (result == 1) // Button 1 has been pressed. Check if it is still being pressed
+    {
+      if (isButton1Pressed()) // Is button 1 still being pressed?
+      {
+        // Button is still being pressed so check if it has been held for minimumHoldMillis
+        if (millis() > (latestButtonPress + minimumHoldMillis))
+        {
+          keepGoing = false; // Button has been held for long enough. Time to leave the loop
+        }
+      }
+      else
+      {
+        // Button 1 has been released so reset result back to zero and go back to looking for a fresh press
+        result = 0;
+      }
+    }
+    else // if (result == 2) // Button 2 has been pressed. Check if it is still being pressed
+    {
+      if (isButton2Pressed()) // Is button 2 still being pressed?
+      {
+        // Button is still being pressed so check if it has been held for minimumHoldMillis
+        if (millis() > (latestButtonPress + minimumHoldMillis))
+        {
+          keepGoing = false; // Button has been held for long enough. Time to leave the loop
+        }
+      }
+      else
+      {
+        // Button 2 has been released so reset result back to zero and go back to looking for a fresh press
+        result = 0;
+      }
+    }
+
+    // Check for a timeout
+    // Check if millis is greater than timeoutMillis plus minimumHoldMillis
+    //   just in case minimumHoldMillis is > timeoutMillis
+    if (millis() > (startMillis + timeoutMillis + minimumHoldMillis))
+    {
+      keepGoing = false; // Timeout. Time to leave the loop
+      timedOut = true;
+    }
+  }
+
+  // keepGoing is false
+  // If timedOut is true, return zero
+  if (timedOut)
+    return (0);
+  
+  // timedOut is false, so we must have recorded a valid button press
+  return (result);
+}
+int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsigned long minimumHoldMillis, unsigned long minimumReleaseMillis, unsigned long overrideStartMillis)
+{
+  unsigned long startMillis; // Record millis when the function was called
+  if (overrideStartMillis > 0)
+  {
+    startMillis = overrideStartMillis;
+  }
+  else
+  {
+    startMillis = millis();
+  }
+  boolean keepGoing = true; // keepGoing if true
+  boolean timedOut = false; // Indicate if we timed out
+  unsigned long latestButtonRelease = 0; // Record the time of the latest button release
+
+  //Begin by checking for a valid button press
+  int result = waitForButtonPress(timeoutMillis, minimumHoldMillis, startMillis);
+
+  //If no button press was recorded, return zero now
+  if (result == 0)
+    return (0);
+  
+  //A valid press was recorded on button 1 or button 2
+  //Now check that the button is released
+  while (keepGoing)
+  {
+    if (result == 1) // Button 1 was pressed. Check if it is still being pressed
+    {
+      if (isButton1Pressed()) // Is button 1 still being pressed?
+      {
+        // Button is still being pressed
+        latestButtonRelease = 0;
+      }
+      else
+      {
+        // Button 1 has been released
+
+        // Check if this is a fresh release (latestButtonRelease == 0)
+        if (latestButtonRelease == 0)
+        {
+          latestButtonRelease = millis(); // Record the time of the release
+        }
+
+        else if (millis() > (latestButtonRelease + minimumReleaseMillis))
+        {
+          keepGoing = false; // Button has been released for long enough. Time to leave the loop
+        }
+      }
+    }
+    else // if (result == 2) // Button 2 was pressed. Check if it is still being pressed
+    {
+      if (isButton2Pressed()) // Is button 2 still being pressed?
+      {
+        // Button is still being pressed
+        latestButtonRelease = 0;
+      }
+      else
+      {
+        // Button 2 has been released
+
+        // Check if this is a fresh release (latestButtonRelease == 0)
+        if (latestButtonRelease == 0)
+        {
+          latestButtonRelease = millis(); // Record the time of the release
+        }
+
+        else if (millis() > (latestButtonRelease + minimumReleaseMillis))
+        {
+          keepGoing = false; // Button has been released for long enough. Time to leave the loop
+        }
+      }
+    }
+
+    // Check for a timeout
+    // Check if millis is greater than timeoutMillis plus minimumHoldMillis plus minimumReleaseMillis
+    //   just in case: minimumHoldMillis or minimumReleaseMillis is > timeoutMillis
+    if (millis() > (startMillis + timeoutMillis + minimumHoldMillis + minimumReleaseMillis))
+    {
+      keepGoing = false; // Timeout. Time to leave the loop
+      timedOut = true;
+    }
+  }
+
+  // keepGoing is false
+  // If timedOut is true, return zero
+  if (timedOut)
+    return (0);
+  
+  // timedOut is false, so we must have recorded a valid button press and release
+  return (result);
+}
+int FlyingJalapeno2::waitForButtonReleasePressRelease(unsigned long timeoutMillis, unsigned long minimumPreReleaseMillis, unsigned long minimumHoldMillis, unsigned long minimumPostReleaseMillis)
+{
+  unsigned long startMillis = millis(); // Record millis when the function was called
+  boolean keepGoing = true; // keepGoing if true
+  boolean timedOut = false; // Indicate if we timed out
+  unsigned long latestButtonRelease = 0; // Record the time of the latest button release
+
+  //Check that neither button is pressed - for at least minimumPreReleaseMillis
+  while (keepGoing)
+  {
+    if ((isButton1Pressed()) || (isButton2Pressed())) // Is either being pressed?
+    {
+      // At least one button is being pressed
+      latestButtonRelease = 0;
+    }
+    else
+    {
+      // Neither button is being pressed
+
+      // Check if this is a fresh release (latestButtonRelease == 0)
+      if (latestButtonRelease == 0)
+      {
+        latestButtonRelease = millis(); // Record the time of the release
+      }
+
+      else if (millis() > (latestButtonRelease + minimumPreReleaseMillis))
+      {
+        keepGoing = false; // Buttons have been released for long enough. Time to leave the loop
+      }
+    }
+
+    // Check for a timeout
+    // Check if millis is greater than timeoutMillis plus minimumPreReleaseMillis plus minimumHoldMillis plus minimumPostReleaseMillis
+    //   just in case: minimumPreReleaseMillis or minimumHoldMillis or minimumPostReleaseMillis is > timeoutMillis
+    if (millis() > (startMillis + timeoutMillis + minimumPreReleaseMillis + minimumHoldMillis + minimumPostReleaseMillis))
+    {
+      keepGoing = false; // Timeout. Time to leave the loop
+      timedOut = true;
+    }
+  }
+
+  // keepGoing is false
+  // If timedOut is true, return zero
+  if (timedOut)
+    return (0);
+  
+  //Now start checking for a valid button press and release
+  int result = waitForButtonPressRelease(timeoutMillis, minimumHoldMillis, minimumPostReleaseMillis, startMillis);
+
+  return (result);
+}
+
 //Turn stat LED on
 void FlyingJalapeno2::statOn()
 {

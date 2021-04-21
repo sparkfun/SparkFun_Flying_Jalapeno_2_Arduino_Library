@@ -21,6 +21,9 @@ isProgramAndTestPressed	KEYWORD2
 isButton1Pressed	KEYWORD2
 isTestPressed	KEYWORD2
 isButton2Pressed	KEYWORD2
+waitForButtonPress	KEYWORD2
+waitForButtonPressRelease	KEYWORD2
+waitForButtonReleasePressRelease	KEYWORD2
 statOn	KEYWORD2
 statOff	KEYWORD2
 verifyVoltage	KEYWORD2
