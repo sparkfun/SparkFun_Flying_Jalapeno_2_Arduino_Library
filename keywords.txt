@@ -14,6 +14,8 @@ FlyingJalapeno2	KEYWORD1
 #######################################
 
 FlyingJalapeno2	KEYWORD2
+enableDebugging	KEYWORD2
+disableDebugging	KEYWORD2
 reset	KEYWORD2
 userReset	KEYWORD2
 isPretestPressed	KEYWORD2
@@ -34,6 +36,8 @@ isV2Shorted	KEYWORD2
 isShortToGround_Custom	KEYWORD2
 setVoltageV1	KEYWORD2
 setVoltageV2	KEYWORD2
+getVoltageSettingV1	KEYWORD2
+getVoltageSettingV2	KEYWORD2
 testVoltage	KEYWORD2
 testVCC	KEYWORD2
 enableV1	KEYWORD2

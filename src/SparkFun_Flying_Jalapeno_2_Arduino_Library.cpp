@@ -34,8 +34,6 @@ FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC)
   else
   {
     // We can not use Serial prints here as Serial will not have been begun at this point
-    //Serial.print("FlyingJalapeno2::FlyingJalapeno2: PANIC! FJ_VCC is not valid: ");
-    //Serial.println(FJ_VCC, 2);
     //Instead, let's blink SOS on statLED
     SOS(statLED);
     SOS(statLED);
@@ -43,29 +41,41 @@ FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC)
   }
 }
 
-//Reset the FJ2 to a safe state. Turn everything off.
+void FlyingJalapeno2::enableDebugging(Stream &debugPort)
+{
+  _debugSerial = &debugPort; //Grab which port the user wants us to use for debugging
+  _printDebug = true; //Should we print the commands we send? Good for debugging
+}
+void FlyingJalapeno2::disableDebugging()
+{
+  _printDebug = false; //Turn off extra print statements
+}
+
+//Reset the FJ2 to a safe state. Turn everything off (except the LEDs if desired).
 //This function also calls userReset. userReset can be overwritten by the user.
 //The user can add any board-specific reset functionality into their own userReset.
 //E.g. setting other FJ2 pins back to their default state.
-void FlyingJalapeno2::reset()
+void FlyingJalapeno2::reset(boolean resetLEDs)
 {
 
-  // Turn all the LEDs off
+  // Turn all the LEDs off - if resetLEDs is true
+  if (resetLEDs)
+  {
+    // Just in case _statLED is not one of the four regular LEDs
+    // (It could be LED_BUILTIN on the FJ2 or a custom LED on the test jig)
+    pinMode(_statLED, OUTPUT);
+    digitalWrite(_statLED, LOW);
 
-  // Just in case _statLED is not one of the four regular LEDs
-  // (It could be LED_BUILTIN on the FJ2 or a custom LED on the test jig)
-  pinMode(_statLED, OUTPUT);
-  digitalWrite(_statLED, LOW);
+    pinMode(FJ2_LED_PROGRAM_AND_TEST_PASS, OUTPUT);
+    pinMode(FJ2_LED_TEST_PASS, OUTPUT);
+    pinMode(FJ2_LED_FAIL, OUTPUT);
+    pinMode(FJ2_STAT_LED, OUTPUT);
 
-  pinMode(FJ2_LED_PROGRAM_AND_TEST_PASS, OUTPUT);
-  pinMode(FJ2_LED_TEST_PASS, OUTPUT);
-  pinMode(FJ2_LED_FAIL, OUTPUT);
-  pinMode(FJ2_STAT_LED, OUTPUT);
-
-  digitalWrite(FJ2_LED_PROGRAM_AND_TEST_PASS, LOW);
-  digitalWrite(FJ2_LED_TEST_PASS, LOW);
-  digitalWrite(FJ2_LED_FAIL, LOW);
-  digitalWrite(FJ2_STAT_LED, LOW);
+    digitalWrite(FJ2_LED_PROGRAM_AND_TEST_PASS, LOW);
+    digitalWrite(FJ2_LED_TEST_PASS, LOW);
+    digitalWrite(FJ2_LED_FAIL, LOW);
+    digitalWrite(FJ2_STAT_LED, LOW);
+  }
 
   // Disable the power
 
@@ -97,6 +107,9 @@ void FlyingJalapeno2::reset()
   digitalWrite(FJ2_TARGET_CS, HIGH);
   pinMode(FJ2_TARGET_CS, INPUT);
 
+  //We do not need to worry about the SPI pins providing parasitic power to the board under test
+  //The SPI buffer prevents that as soon as FJ2_SPI_EN is low
+
   // Set up the optional pins
   pinMode(FJ2_BRAIN_VCC_A0, INPUT);
   digitalWrite(FJ2_I2C_EN, LOW); // Make sure the I2C buffer is disabled by pulling FJ2_I2C_EN low
@@ -112,9 +125,9 @@ void FlyingJalapeno2::reset()
 
   // Call userReset - which can be overwritten by the user
 
-  userReset(); // Do any board-specific resety stuff in userReset
+  userReset(resetLEDs); // Do any board-specific resety stuff in userReset
 }
-void userReset() // Declared __attribute__((weak)) in the header file so the user can overwrite it
+void userReset(boolean resetLEDs) // Declared __attribute__((weak)) in the header file so the user can overwrite it
 {
   // Do not use Serial prints here as Serial will not have been begun at this point
 }
@@ -232,6 +245,10 @@ int FlyingJalapeno2::waitForButtonPress(unsigned long timeoutMillis, unsigned lo
     //   just in case minimumHoldMillis is > timeoutMillis
     if (millis() > (startMillis + timeoutMillis + minimumHoldMillis))
     {
+      if (_printDebug == true)
+      {
+        _debugSerial->println(F("FlyingJalapeno2::waitForButtonPress: timed out!"));
+      }
       keepGoing = false; // Timeout. Time to leave the loop
       timedOut = true;
     }
@@ -243,8 +260,17 @@ int FlyingJalapeno2::waitForButtonPress(unsigned long timeoutMillis, unsigned lo
     return (0);
   
   // timedOut is false, so we must have recorded a valid button press
+
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::waitForButtonPress: button "));
+    _debugSerial->print(result);
+    _debugSerial->print(F(" pressed"));
+  }
+
   return (result);
 }
+
 int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsigned long minimumHoldMillis, unsigned long minimumReleaseMillis, unsigned long overrideStartMillis)
 {
   unsigned long startMillis; // Record millis when the function was called
@@ -259,6 +285,11 @@ int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsi
   boolean keepGoing = true; // keepGoing if true
   boolean timedOut = false; // Indicate if we timed out
   unsigned long latestButtonRelease = 0; // Record the time of the latest button release
+
+  if (_printDebug == true)
+  {
+    _debugSerial->println(F("FlyingJalapeno2::waitForButtonPressRelease: calling waitForButtonPress"));
+  }
 
   //Begin by checking for a valid button press
   int result = waitForButtonPress(timeoutMillis, minimumHoldMillis, startMillis);
@@ -290,6 +321,10 @@ int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsi
 
         else if (millis() > (latestButtonRelease + minimumReleaseMillis))
         {
+          if (_printDebug == true)
+          {
+            _debugSerial->println(F("FlyingJalapeno2::waitForButtonPressRelease: button 1 has been released"));
+          }
           keepGoing = false; // Button has been released for long enough. Time to leave the loop
         }
       }
@@ -313,6 +348,10 @@ int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsi
 
         else if (millis() > (latestButtonRelease + minimumReleaseMillis))
         {
+          if (_printDebug == true)
+          {
+            _debugSerial->println(F("FlyingJalapeno2::waitForButtonPressRelease: button 2 has been released"));
+          }
           keepGoing = false; // Button has been released for long enough. Time to leave the loop
         }
       }
@@ -323,6 +362,10 @@ int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsi
     //   just in case: minimumHoldMillis or minimumReleaseMillis is > timeoutMillis
     if (millis() > (startMillis + timeoutMillis + minimumHoldMillis + minimumReleaseMillis))
     {
+      if (_printDebug == true)
+      {
+        _debugSerial->println(F("FlyingJalapeno2::waitForButtonPressRelease: timed out!"));
+      }
       keepGoing = false; // Timeout. Time to leave the loop
       timedOut = true;
     }
@@ -336,6 +379,7 @@ int FlyingJalapeno2::waitForButtonPressRelease(unsigned long timeoutMillis, unsi
   // timedOut is false, so we must have recorded a valid button press and release
   return (result);
 }
+
 int FlyingJalapeno2::waitForButtonReleasePressRelease(unsigned long timeoutMillis, unsigned long minimumPreReleaseMillis, unsigned long minimumHoldMillis, unsigned long minimumPostReleaseMillis)
 {
   unsigned long startMillis = millis(); // Record millis when the function was called
@@ -363,6 +407,10 @@ int FlyingJalapeno2::waitForButtonReleasePressRelease(unsigned long timeoutMilli
 
       else if (millis() > (latestButtonRelease + minimumPreReleaseMillis))
       {
+        if (_printDebug == true)
+        {
+          _debugSerial->println(F("FlyingJalapeno2::waitForButtonReleasePressRelease: neither button pressed. Calling waitForButtonPressRelease"));
+        }
         keepGoing = false; // Buttons have been released for long enough. Time to leave the loop
       }
     }
@@ -372,6 +420,10 @@ int FlyingJalapeno2::waitForButtonReleasePressRelease(unsigned long timeoutMilli
     //   just in case: minimumPreReleaseMillis or minimumHoldMillis or minimumPostReleaseMillis is > timeoutMillis
     if (millis() > (startMillis + timeoutMillis + minimumPreReleaseMillis + minimumHoldMillis + minimumPostReleaseMillis))
     {
+      if (_printDebug == true)
+      {
+        _debugSerial->println(F("FlyingJalapeno2::waitForButtonReleasePressRelease: timed out!"));
+      }
       keepGoing = false; // Timeout. Time to leave the loop
       timedOut = true;
     }
@@ -450,8 +502,11 @@ boolean FlyingJalapeno2::PreTest_Custom(byte control_pin, byte read_pin)
   delay(200);
   int reading = analogRead(read_pin);
 
-  Serial.print("FlyingJalapeno2::PreTest_Custom: jumper test reading: ");
-  Serial.println(reading);
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::PreTest_Custom: jumper test reading: "));
+    _debugSerial->println(reading);
+  }
 
   digitalWrite(control_pin, LOW);
   pinMode(control_pin, INPUT);
@@ -463,7 +518,7 @@ boolean FlyingJalapeno2::PreTest_Custom(byte control_pin, byte read_pin)
 }
 
 // GENERIC PRE-TEST for shorts to GND on power rails, returns FALSE if all is good, returns TRUE if there is short detected
-boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin, boolean debug)
+boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin)
 {
   pinMode(control_pin, OUTPUT);
   pinMode(read_pin, INPUT);
@@ -472,8 +527,11 @@ boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin,
   delay(200);
   int reading = analogRead(read_pin);
 
-  if(debug) Serial.print("FlyingJalapeno2::isShortToGround_Custom: jumper test reading:");
-  if(debug) Serial.println(reading);
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::isShortToGround_Custom: jumper test reading: "));
+    _debugSerial->println(reading);
+  }
 
   digitalWrite(control_pin, LOW);
   pinMode(control_pin, INPUT);
@@ -481,12 +539,8 @@ boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin,
   float jumper_val = 486;
 
   if ((((float)reading) < (jumper_val * 1.03)) && (((float)reading) > (jumper_val * 0.97)))
-	{
-		if (!debug) Serial.print("FlyingJalapeno2::isShortToGround_Custom: jumper test reading:"); // check debug, to avoid double printing
-		if (!debug) Serial.println(reading);
 		return true; // jumper detected!!
-	}
-  else return false;
+  return false;
 }
 
 //Test power circuit to see if there is a short on the target
@@ -516,7 +570,10 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
   else if (select == 2) read_pin = FJ2_PT_READ_V2;
   else
   {
-    Serial.println("FlyingJalapeno2::powerTest: Error! select must be 1 or 2.");
+    if (_printDebug == true)
+    {
+      _debugSerial->println(F("FlyingJalapeno2::powerTest: Error! select must be 1 or 2."));
+    }
     return (false);
   }
 
@@ -530,8 +587,11 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
 
   int reading = analogRead(read_pin);
 
-  //Serial.print("FlyingJalapeno2::powerTest: power test reading (should >500 or <471): ");
-  //Serial.println(reading);
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::powerTest: power test reading: "));
+    _debugSerial->println(reading);
+  }
 
   //Release the control pin
   digitalWrite(FJ2_POWER_TEST_CONTROL, LOW);
@@ -580,7 +640,7 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
 //expectedVoltage = voltage we expect. 0.0 to 5.0 (float)
 //allowedPercent = allowed window for overage. 0 to 100 (int) (default 10%)
 //debug = print debug statements (default false)
-boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allowedPercent, boolean debug)
+boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allowedPercent)
 {
   //float allowanceFraction = map(allowedPercent, 0, 100, 0, 1.0); //Scale int to a fraction of 1.0
   //Grrrr! map doesn't work with floats at all
@@ -594,23 +654,29 @@ boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allow
   int reading = analogRead(pin);
 
   //Convert reading to voltage
-  float readVoltage = _FJ_VCC / 1024 * reading;
+  float readVoltage = _FJ_VCC / 1023 * reading;
 
-  if (debug)
+  boolean result = ((readVoltage <= (expectedVoltage * (1.0 + allowanceFraction))) && (readVoltage >= (expectedVoltage * (1.0 - allowanceFraction))));
+
+  if (_printDebug == true)
   {
-    Serial.print("FlyingJalapeno2::verifyVoltage: allowanceFraction: ");
-    Serial.println(allowanceFraction);
+    _debugSerial->print(F("FlyingJalapeno2::verifyVoltage: expectedVoltage: "));
+    _debugSerial->println(expectedVoltage, 2);
 
-    Serial.print("FlyingJalapeno2::verifyVoltage: reading: ");
-    Serial.println(reading);
+    _debugSerial->print(F("FlyingJalapeno2::verifyVoltage: allowanceFraction: "));
+    _debugSerial->println(allowanceFraction, 2);
 
-    Serial.print("FlyingJalapeno2::verifyVoltage: voltage: ");
-    Serial.println(readVoltage, 2);
+    _debugSerial->print(F("FlyingJalapeno2::verifyVoltage: reading: "));
+    _debugSerial->println(reading);
+    
+    _debugSerial->print(F("FlyingJalapeno2::verifyVoltage: voltage: "));
+    _debugSerial->println(readVoltage, 2);
+
+    _debugSerial->print(F("FlyingJalapeno2::verifyVoltage: result: "));
+    _debugSerial->println(result);
   }
 
-  if ((readVoltage <= (expectedVoltage * (1.0 + allowanceFraction))) && (readVoltage >= (expectedVoltage * (1.0 - allowanceFraction))))
-    return true; // good value
-  return false;
+  return (result);
 }
 
 boolean FlyingJalapeno2::verifyValue(float input_value, float correct_val, float allowance_percent)
@@ -627,13 +693,20 @@ void FlyingJalapeno2::enableV1(void)
 {
   if (_V1_setting == 0.0) // Check if setVoltageV1 has been called
   {
-    Serial.print("FlyingJalapeno2::enableV1: setVoltageV1 has not been called. Aborting...");
+    if (_printDebug == true)
+    {
+      _debugSerial->println(F("FlyingJalapeno2::enableV1: setVoltageV1 has not been called. Aborting..."));
+    }
     return;
   }
 
   digitalWrite(FJ2_V1_POWER_CONTROL, HIGH); // turn on the high side switch
   pinMode(FJ2_V1_POWER_CONTROL, OUTPUT);
   _V1_actual = _V1_setting;
+  if (_printDebug == true)
+  {
+    _debugSerial->println(F("FlyingJalapeno2::enableV1: V1 enabled!"));
+  }
 }
 
 void FlyingJalapeno2::disableV1(void)
@@ -642,6 +715,10 @@ void FlyingJalapeno2::disableV1(void)
   digitalWrite(FJ2_V1_POWER_CONTROL, LOW); // turn off the high side switch
   pinMode(FJ2_V1_POWER_CONTROL, OUTPUT);
   _V1_actual = 0.0;
+  if (_printDebug == true)
+  {
+    _debugSerial->println(F("FlyingJalapeno2::disableV1: V1 disabled!"));
+  }
 }
 
 //Enable or disable regulator #2
@@ -649,13 +726,20 @@ void FlyingJalapeno2::enableV2(void)
 {
   if (_V2_setting == 0.0) // Check if setVoltageV2 has been called
   {
-    Serial.print("FlyingJalapeno2::enableV2: setVoltageV2 has not been called. Aborting...");
+    if (_printDebug == true)
+    {
+      _debugSerial->println(F("FlyingJalapeno2::enableV2: setVoltageV2 has not been called. Aborting..."));
+    }
     return;
   }
 
   digitalWrite(FJ2_V2_POWER_CONTROL, HIGH); // turn on the high side switch
   pinMode(FJ2_V2_POWER_CONTROL, OUTPUT);
   _V2_actual = _V2_setting;
+  if (_printDebug == true)
+  {
+    _debugSerial->println(F("FlyingJalapeno2::enableV2: V2 enabled!"));
+  }
 }
 
 void FlyingJalapeno2::disableV2(void)
@@ -664,6 +748,10 @@ void FlyingJalapeno2::disableV2(void)
   digitalWrite(FJ2_V2_POWER_CONTROL, LOW); // turn off the high side switch
   pinMode(FJ2_V2_POWER_CONTROL, OUTPUT);
   _V2_actual = 0.0;
+  if (_printDebug == true)
+  {
+    _debugSerial->println(F("FlyingJalapeno2::disableV2: V2 disabled!"));
+  }
 }
 
 //Setup the first power supply to the chosen voltage level
@@ -690,12 +778,22 @@ void FlyingJalapeno2::setVoltageV1(float voltage)
   }
   else
   {
-    Serial.print("FlyingJalapeno2::setVoltageV1: invalid voltage specified: ");
-    Serial.print(voltage, 2);
-    Serial.println(". Defaulting to 3.3V");
+    if (_printDebug == true)
+    {
+      _debugSerial->print(F("FlyingJalapeno2::setVoltageV1: invalid voltage specified: "));
+      _debugSerial->print(voltage, 2);
+      _debugSerial->println(F(". Defaulting to 3.3V"));
+    }
     pinMode(FJ2_V1_CONTROL_TO_3V3, OUTPUT); // default to 3.3V - even when the high side switch is turn off.
     digitalWrite(FJ2_V1_CONTROL_TO_3V3, LOW);
     _V1_setting = 3.3;
+  }
+
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::setVoltageV1: V1 will be "));
+    _debugSerial->print(_V1_setting, 1);
+    _debugSerial->println(F("V when enabled"));
   }
 }
 
@@ -739,17 +837,40 @@ void FlyingJalapeno2::setVoltageV2(float voltage)
   }
   else
   {
-    Serial.print("FlyingJalapeno2::setVoltageV2: invalid voltage specified: ");
-    Serial.print(voltage, 2);
-    Serial.println(". Defaulting to 3.3V");
+    if (_printDebug == true)
+    {
+      _debugSerial->print(F("FlyingJalapeno2::setVoltageV2: invalid voltage specified: "));
+      _debugSerial->print(voltage, 2);
+      _debugSerial->println(F(". Defaulting to 3.3V"));
+    }
     pinMode(FJ2_V2_CONTROL_TO_3V3, OUTPUT); // default to 3.3V
     digitalWrite(FJ2_V2_CONTROL_TO_3V3, LOW);
     _V2_setting = 3.3;
   }
+
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::setVoltageV2: V2 will be "));
+    _debugSerial->print(_V2_setting, 1);
+    _debugSerial->println(F("V when enabled"));
+  }
 }
 
+//Return _V1_setting - i.e. what V1 will be when enabled
+float FlyingJalapeno2::getVoltageSettingV1()
+{
+  return (_V1_setting);
+}
+
+//Return _V2_setting - i.e. what V2 will be when enabled
+float FlyingJalapeno2::getVoltageSettingV2()
+{
+ return (_V2_setting);
+}
+
+
 //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
-boolean FlyingJalapeno2::testVoltage(byte select, boolean debug) // select is either "1" or "2"
+boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
 {
   //Specify the read_pin and expected voltage
   byte read_pin;
@@ -766,12 +887,24 @@ boolean FlyingJalapeno2::testVoltage(byte select, boolean debug) // select is ei
   }
   else
   {
-    Serial.println("FlyingJalapeno2::testVoltage: Error! select must be 1 or 2.");
+    if (_printDebug == true)
+    {
+      _debugSerial->println(F("FlyingJalapeno2::testVoltage: Error! select must be 1 or 2."));
+    }
     return (false);
   }
 
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::testVoltage: Testing V"));
+    _debugSerial->print(select);
+    _debugSerial->print(F(". The expected voltage (from the resistor divider) is "));
+    _debugSerial->print(expectedVoltage, 2);
+    _debugSerial->println(F("V"));
+  }
+
   //Verify the voltage is within 5%
-  return (verifyVoltage(read_pin, expectedVoltage, 5, debug));
+  return (verifyVoltage(read_pin, expectedVoltage, 5));
 }
 
 //Test if the FJ2 VCC has been set correctly (using the 3.3V Zener diode on FJ2_BRAIN_VCC_A0)
@@ -784,16 +917,38 @@ boolean FlyingJalapeno2::testVCC()
 
   int val = analogRead(FJ2_BRAIN_VCC_A0);
 
+  if (_printDebug == true)
+  {
+    _debugSerial->print(F("FlyingJalapeno2::testVCC: VCC should be "));
+    _debugSerial->print(_FJ_VCC, 2);
+    _debugSerial->println(F("V"));
+    _debugSerial->print(F("FlyingJalapeno2::testVCC: val is: "));
+    _debugSerial->print(val);
+  }
+
   if ((_FJ_VCC >= 3.29) && (_FJ_VCC <= 3.31)) // Is VCC supposed to be 3.3V?
   {
     // val should be max'd out at 1023. Return false if it isn't (i.e. VCC is higher than 3.3V!)
-    if (val < 950) 
+    if (val < 950)
+    {
+      if (_printDebug == true)
+      {
+        _debugSerial->print(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be higher than 3.3V!"));
+      }
       return false;
+    }
     return true;
   }
 
   // else: _FJ_VCC must be 5.0V so check diode voltage reads as 3.3V
-  return (verifyVoltage(FJ2_BRAIN_VCC_A0, 3.3, 10, true));
+  boolean result = verifyVoltage(FJ2_BRAIN_VCC_A0, 3.3, 10);
+
+  if ((!result) && (_printDebug == true))
+  {
+    _debugSerial->print(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be out of bounds!"));
+  }
+
+  return (result);
 }
 
 //Enable the I2C buffer by pulling FJ2_I2C_EN high
@@ -859,7 +1014,7 @@ void FlyingJalapeno2::disableMicroSDBuffer()
 //Verify the address of an I2C device
 //If address is zero, do a full scan
 //Return true if the specified address pings correctly
-boolean FlyingJalapeno2::verifyI2Cdevice(byte address, boolean debug)
+boolean FlyingJalapeno2::verifyI2Cdevice(byte address)
 {
   byte error;
   boolean result = false;
@@ -868,11 +1023,11 @@ boolean FlyingJalapeno2::verifyI2Cdevice(byte address, boolean debug)
   {
     if ((address == 0) || (device == address)) // Check if we shoudl ping this one
     {
-      if (debug)
+      if (_printDebug == true)
       {
-        Serial.print("FlyingJalapeno2::verifyI2Cdevice: Pinging address 0x");
-        if (device < 16) Serial.print("0");
-        Serial.print(device, HEX);
+        _debugSerial->print(F("FlyingJalapeno2::verifyI2Cdevice: Pinging address 0x"));
+        if (device < 16) _debugSerial->print("0");
+        _debugSerial->print(device, HEX);
       }
 
       Wire.beginTransmission(device); // Ping this device
@@ -880,23 +1035,17 @@ boolean FlyingJalapeno2::verifyI2Cdevice(byte address, boolean debug)
 
       if (error == 0)
       {
-        if (debug)
+        if (_printDebug == true)
         {
-          Serial.println("... Found!");
-        }
-        else
-        {
-          Serial.print("FlyingJalapeno2::verifyI2Cdevice: Device found at address 0x");
-          if (device < 16) Serial.print("0");
-          Serial.println(device, HEX);
+          _debugSerial->println("... Found!");
         }
         result = true;
       }
       else if (error == 4)
       {
-        if (debug)
+        if (_printDebug == true)
         {
-          Serial.println("... Unknown error!");
+          _debugSerial->println("... Unknown error!");
         }
       }
     }

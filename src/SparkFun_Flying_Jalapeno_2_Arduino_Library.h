@@ -62,10 +62,10 @@
 #define FJ2_MICROSD_EN 47 // 74LVC4066 microSD buffer enable
 #define FJ2_MICROSD_CS 49 // 74LVC4066 SPI buffer enable
 
-//Just in case you were wondering what the SPI pins are:
-//#define CIPO 50
-//#define COPI 51
-//#define SCK 52
+//The SPI pins
+#define FJ2_CIPO 50
+#define FJ2_COPI 51
+#define FJ2_SCK 52
 #define FJ2_TARGET_CS 53
 
 
@@ -77,8 +77,11 @@ class FlyingJalapeno2
 
     FlyingJalapeno2(int statLED, float FJ_VCC = 3.3);
 
-    void reset(); //Reset the FJ2. Turn everything off. Also calls userReset
-    void userReset() __attribute__((weak)); //The user can overwrite this with a custom reset function for the board being tested
+    void enableDebugging(Stream &debugPort = Serial); // Enable helpful debug messages on the chosen serial port
+    void disableDebugging(); // Turn off debug messages
+
+    void reset(boolean resetLEDs = true); //Reset the FJ2. Turn everything off. Also calls userReset
+    void userReset(boolean resetLEDs = true) __attribute__((weak)); //The user can overwrite this with a custom reset function for the board being tested
 	
     boolean isPretestPressed(long threshold = 5000); //Returns true if cap sense button 1 is being pressed
     boolean isProgramAndTestPressed(long threshold = 5000); //Helper function: calls isPretestPressed
@@ -104,7 +107,7 @@ class FlyingJalapeno2
     void statOff();
 
     //Returns true if pin voltage is within a given window of the value we are looking for
-    boolean verifyVoltage(int pin, float expectedVoltage, int allowedPercent = 10, boolean debug = false); 
+    boolean verifyVoltage(int pin, float expectedVoltage, int allowedPercent = 10); 
     
     boolean verifyValue(float input_value, float correct_val, float allowance_percent);
 
@@ -112,12 +115,14 @@ class FlyingJalapeno2
     
     boolean isV1Shorted(); //Test V1 for shorts. Returns true if short detected.
     boolean isV2Shorted(); //Test V2 for shorts. Returns true if short detected.
-    boolean isShortToGround_Custom(byte control_pin, byte read_pin, boolean debug = false); // test for a short to gnd on a custom set of pins
+    boolean isShortToGround_Custom(byte control_pin, byte read_pin); // test for a short to gnd on a custom set of pins
 
     void setVoltageV1(float voltage); //Set V1 voltage (5 or 3.3V)
     void setVoltageV2(float voltage); //Set V2 voltage (3.3, 3.7, 4.2, or 5V)
+    float getVoltageSettingV1(); //Return _V1_setting - i.e. what V1 will be when enabled
+    float getVoltageSettingV2(); //Return _V2_setting - i.e. what V2 will be when enabled
 
-    boolean testVoltage(byte select, boolean debug = false); //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
+    boolean testVoltage(byte select); //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
 
     boolean testVCC(); //Test if the FJ2 VCC has been set correctly (using the 3.3V Zener diode on FJ2_BRAIN_VCC_A0)
 
@@ -140,9 +145,12 @@ class FlyingJalapeno2
     void enableMicroSDBuffer(); //Enable the microSD buffer by pulling FJ2_MICROSD_EN high
     void disableMicroSDBuffer(); //Disable the microSD buffer by pulling FJ2_MICROSD_EN low
 
-    boolean verifyI2Cdevice(byte address = 0, boolean debug = false); // If address is zero, do a full scan
+    boolean verifyI2Cdevice(byte address = 0); // If address is zero, do a full scan
 
   private:
+
+  	Stream *_debugSerial;			//The stream to send debug messages to if enabled
+  	boolean _printDebug = false;		//Flag to print the serial commands we are sending to the Serial port for debug
 
     int _statLED; // Define which status LED to use. Usually FJ2_STAT_LED, but can be custom if needed
 	  float _FJ_VCC; // The FJ2 VCC. Used in A2D voltage calculations
