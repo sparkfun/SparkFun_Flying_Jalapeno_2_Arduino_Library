@@ -28,6 +28,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test for shorts");
 
+  //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
+
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
 

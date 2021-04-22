@@ -18,6 +18,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test VCC example");
 
+  FJ2.enableDebugging(); //Enable helpful debug messages on Serial
+
   //We told the FJ2 library that we expect VCC to be 3.3V when we instantiated FJ2
   //We can check that VCC really is 3.3V by calling testVCC()
   //testVCC() checks the VCC by reading the voltage of the 3.3V Zener diode on FJ2_BRAIN_VCC_A0

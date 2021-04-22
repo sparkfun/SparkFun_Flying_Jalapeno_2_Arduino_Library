@@ -18,6 +18,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test V1 and V2 example");
 
+  FJ2.enableDebugging(); // Enable helpful debug messages on Serial
+
   if(FJ2.testVCC() == false)
   {
     while(1) // Stay in this loop until reset
@@ -54,13 +56,13 @@ void setup()
   //But what if there is a heavy active load on V1 or V2? Or a fault in the FJ2 MicroPower section?
   //testVoltage will tell us if V1/V2 are OK (based on what we expect them to be from setVoltageV1/setVoltageV2)
   //testVoltage returns true if the voltage is OK
-  if(FJ2.testVoltage(1, true) == false) // Test V1 and request debug messages
+  if(FJ2.testVoltage(1) == false) // Test V1
   {
     Serial.println("Whoa! V1 is out of bounds");
     while(1); // Do nothing more
   }
 
-  if(FJ2.testVoltage(2, true) == false) // Test V2 and request debug messages
+  if(FJ2.testVoltage(2) == false) // Test V2
   {
     Serial.println("Whoa! V2 is out of bounds");
     while(1); // Do nothing more

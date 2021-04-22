@@ -22,9 +22,11 @@ void setup()
   Serial.begin(115200);
   Serial.println("I2C Enable Example");
 
+  FJ2.enableDebugging(); //Enable helpful debug messages on Serial
+
   FJ2.enableI2CBuffer(); //Enable the I2C buffer
 
-  Wire.begin(); // Start Wire (verifyI2Cdevice will not do it for us, nor should it as it can lead to clock speed problems)
+  Wire.begin(); // Start Wire (verifyI2Cdevice will not do it for us, nor should it, as it can lead to clock speed problems)
 
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
 
@@ -40,9 +42,12 @@ void setup()
   //Wait for the power to be stable
   delay(1000);
 
-  //Do a full scan of all I2C addresses with debug enabled to see what is connected
+  //Do a full scan of all I2C addresses to see what is connected
   //(If the address parameter is zero, verifyI2Cdevice scans all addresses from 1 to 126 inclusive)
-  FJ2.verifyI2Cdevice(0, true);
+  if (FJ2.verifyI2Cdevice(0))
+  {
+    Serial.println("Device found!");
+  }
 }
 
 void loop()

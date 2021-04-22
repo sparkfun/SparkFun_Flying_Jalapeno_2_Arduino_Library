@@ -18,6 +18,8 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println("Reading the cap sense buttons example");
+
+  //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
 }
 
 void loop()

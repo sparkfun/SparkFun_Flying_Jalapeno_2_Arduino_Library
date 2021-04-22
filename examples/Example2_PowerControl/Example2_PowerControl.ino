@@ -22,6 +22,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Power Control Example");
 
+  //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
+
   //V1 can be set to 5V or 3.3V
   FJ2.setVoltageV1(3.3); //Set V1 to 3.3V. V1 isn't enabled until we call enableV1
 

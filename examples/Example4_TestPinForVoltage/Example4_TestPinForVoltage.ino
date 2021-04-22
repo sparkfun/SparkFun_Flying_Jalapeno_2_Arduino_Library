@@ -2,7 +2,7 @@
   This example shows how to test a pin for a specific voltage.
 
   Here's the function:
-  verifyVoltage(pin to test, expected voltage (float), percent of variance allowed (default 10 = 10%), print debug true/(default)false)
+  verifyVoltage(pin to test, expected voltage (float), percent of variance allowed (default 10 = 10%))
 
   Pete Lewis, started on 11/3/2016
   Contributions by NES November 15th, 2016
@@ -21,6 +21,8 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println("Test pin for voltage example");
+
+  //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
 
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
@@ -58,7 +60,7 @@ void loop()
   }
 
   //This demonstrates the extended call to the function
-  boolean result2 = FJ2.verifyVoltage(A0, 3.3, 10, true); //A0, 3.3V, within 10%, and print debug statements
+  boolean result2 = FJ2.verifyVoltage(A0, 3.3, 10); //A0, 3.3V, within 10%
   
   if(result2 == true)
   {
