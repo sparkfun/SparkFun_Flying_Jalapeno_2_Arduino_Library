@@ -42,7 +42,7 @@ bool ProgramAndTestPressed; // Record which button was pressed to start the test
 int failures = 0; //Number of failures by the main test routine
 
 // ************************************************************************************************
-// ----- Define any extra FJ2 Pins which are connected to the baord under test -----
+// ----- Define any extra FJ2 Pins which are connected to the board under test -----
 
 int interrupt_pin = A1;  // The board interrupt pin - connected to A1 on the FJ2
 
@@ -192,7 +192,7 @@ void loop()
 
       if (FJ2.testVoltage(1) == false) // Test V1
       {
-        Serial.println(F("Step 4:  FAIL! V1 is not 3.3V. Check for shorts around the flash chip"));
+        Serial.println(F("Step 4:  FAIL! V1 is not 3.3V. Check for shorts around <insert your debug message here>"));
         loop_step = fail;
       }
       else
@@ -209,7 +209,7 @@ void loop()
       static int numStep5s = 0; // Keep track of how many times we have done step5 (making numStep5s static stops it being reset to zero each time)
       
       Serial.println();
-      if (FJ2.getVoltageSettingV2() < 4.15) // If we have not yet called FJ2.testVoltage(2), getVoltageSettingV2() will return zero
+      if (FJ2.getVoltageSettingV2() < 4.15) // If we have not yet called FJ2.setVoltage(2), getVoltageSettingV2() will return zero
       {
         Serial.println(F("Step 5: Setting V2 to 4.2V"));
         FJ2.setVoltageV2(4.2); // Get ready to set V2 to 4.2V
@@ -225,7 +225,7 @@ void loop()
 
       if (FJ2.testVoltage(2) == false) // Test V2
       {
-        Serial.println(F("Step 5:  FAIL! V1 is not correct. Check for shorts around the battery charger chip"));
+        Serial.println(F("Step 5:  FAIL! V2 is not correct. Check for shorts around the battery charger chip"));
         loop_step = fail;
       }
       else
@@ -237,7 +237,7 @@ void loop()
         }
         else
         {
-          delay(500);
+          delay(500); // Delay and repeat this step
         }
       }
     }
@@ -253,7 +253,7 @@ void loop()
 
       FJ2.enableI2CBuffer();
 
-      Wire.begin(); // Begin teh I2C bus
+      Wire.begin(); // Begin the I2C bus
 
       delay(1000); // Give the I2C bus time to power up
 
@@ -267,6 +267,7 @@ void loop()
       }
       else
       {
+        Serial.println("Step 6: FAIL! I2C device not found!");
         loop_step = fail;
       }
     }
@@ -292,6 +293,7 @@ void loop()
       }
       else
       {
+        Serial.println("Step 7: FAIL! interrupt pin voltage is out of range");
         loop_step = fail;
       }
     }
