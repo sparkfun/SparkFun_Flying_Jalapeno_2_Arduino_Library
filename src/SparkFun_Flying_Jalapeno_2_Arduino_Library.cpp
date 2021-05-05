@@ -127,9 +127,9 @@ void FlyingJalapeno2::reset(boolean resetLEDs)
 
   userReset(resetLEDs); // Do any board-specific resety stuff in userReset
 }
-void userReset(boolean resetLEDs) // Declared __attribute__((weak)) in the header file so the user can overwrite it
+void FlyingJalapeno2::userReset(boolean resetLEDs) // Declared __attribute__((weak)) in the header file so the user can overwrite it
 {
-  // Do not use Serial prints here as Serial will not have been begun at this point
+  ; // Do not use Serial prints here as Serial will not have been begun at this point
 }
 
 //Returns true if value is over threshold
@@ -265,7 +265,7 @@ int FlyingJalapeno2::waitForButtonPress(unsigned long timeoutMillis, unsigned lo
   {
     _debugSerial->print(F("FlyingJalapeno2::waitForButtonPress: button "));
     _debugSerial->print(result);
-    _debugSerial->print(F(" pressed"));
+    _debugSerial->println(F(" pressed"));
   }
 
   return (result);
@@ -547,12 +547,12 @@ boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin)
 //Returns true if there is a short
 boolean FlyingJalapeno2::isV1Shorted()
 {
-  return (!powerTest(1)); // Test V1
+  return (powerTest(1) == false); // Test V1
 }
 
 boolean FlyingJalapeno2::isV2Shorted()
 {
-  return (!powerTest(2)); // Test V2
+  return (powerTest(2) == false); // Test V2
 }
 
 //PRIVATE: Test target board for shorts to GND
@@ -622,11 +622,11 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
 
   if ((_FJ_VCC >= 3.29) && (_FJ_VCC <= 3.31)) // Is VCC supposed to be 3.3V?
   {
-    jumper_val = 710; // 789 * 90%
+    jumper_val = 600; // Split the difference 
   }
   else
   {
-    jumper_val = 753; // 837 * 90%
+    jumper_val = 640; // Split the difference 
   }
 
   if (reading < jumper_val)
@@ -879,6 +879,7 @@ boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
   {
     read_pin = FJ2_PT_READ_V1;
     expectedVoltage = _V1_actual * 10.0 / 11.0; // Compensate for resistor divider
+    expectedVoltage *= 1.05; // Fiddle factor - from FJ2 testing
   }
   else if (select == 2)
   {
@@ -912,7 +913,7 @@ boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
 boolean FlyingJalapeno2::testVCC()
 {
   //Check VCC by reading the 3.3V zener connected to A0
-  //If VCC is 3.3V, the signal on A0 will be full range
+  //If VCC is 3.3V, the signal on A0 will be close to full range
   //If VCC is 5V, the signal on A0 will be (roughly) 3.3V/5V * 1023 = 675
 
   int val = analogRead(FJ2_BRAIN_VCC_A0);
@@ -923,17 +924,18 @@ boolean FlyingJalapeno2::testVCC()
     _debugSerial->print(_FJ_VCC, 2);
     _debugSerial->println(F("V"));
     _debugSerial->print(F("FlyingJalapeno2::testVCC: val is: "));
-    _debugSerial->print(val);
+    _debugSerial->println(val);
   }
 
   if ((_FJ_VCC >= 3.29) && (_FJ_VCC <= 3.31)) // Is VCC supposed to be 3.3V?
   {
-    // val should be max'd out at 1023. Return false if it isn't (i.e. VCC is higher than 3.3V!)
-    if (val < 950)
+    // val should be close to 1023. Return false if it isn't (i.e. VCC is higher than 3.3V!)
+    // Note: on the one FJ2 I have tested so far, val is: ~900 for 3.3V; and ~700 for 5.0V
+    if (val < 800)
     {
       if (_printDebug == true)
       {
-        _debugSerial->print(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be higher than 3.3V!"));
+        _debugSerial->println(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be higher than 3.3V!"));
       }
       return false;
     }
@@ -945,7 +947,7 @@ boolean FlyingJalapeno2::testVCC()
 
   if ((!result) && (_printDebug == true))
   {
-    _debugSerial->print(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be out of bounds!"));
+    _debugSerial->println(F("FlyingJalapeno2::testVCC: PANIC! VCC appears to be out of bounds!"));
   }
 
   return (result);
@@ -1021,12 +1023,12 @@ boolean FlyingJalapeno2::verifyI2Cdevice(byte address)
 
   for (int device = 1; device < 127; device++) // Step through all devices
   {
-    if ((address == 0) || (device == address)) // Check if we shoudl ping this one
+    if ((address == 0) || (device == address)) // Check if we should ping this one
     {
       if (_printDebug == true)
       {
         _debugSerial->print(F("FlyingJalapeno2::verifyI2Cdevice: Pinging address 0x"));
-        if (device < 16) _debugSerial->print("0");
+        if (device < 16) _debugSerial->print(F("0"));
         _debugSerial->print(device, HEX);
       }
 
@@ -1037,7 +1039,7 @@ boolean FlyingJalapeno2::verifyI2Cdevice(byte address)
       {
         if (_printDebug == true)
         {
-          _debugSerial->println("... Found!");
+          _debugSerial->println(F("... Found!"));
         }
         result = true;
       }
@@ -1045,7 +1047,14 @@ boolean FlyingJalapeno2::verifyI2Cdevice(byte address)
       {
         if (_printDebug == true)
         {
-          _debugSerial->println("... Unknown error!");
+          _debugSerial->println(F("... Unknown error!"));
+        }
+      }
+      else
+      {
+        if (_printDebug == true)
+        {
+          _debugSerial->println();
         }
       }
     }

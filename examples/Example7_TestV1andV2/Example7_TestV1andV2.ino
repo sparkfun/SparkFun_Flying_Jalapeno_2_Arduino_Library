@@ -34,13 +34,13 @@ void setup()
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
 
-  if(FJ2.isV1Shorted() == false)
+  if(FJ2.isV1Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V1");
     while(1); // Do nothing more
   }
 
-  if(FJ2.isV2Shorted() == false)
+  if(FJ2.isV2Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V2");
     while(1); // Do nothing more
