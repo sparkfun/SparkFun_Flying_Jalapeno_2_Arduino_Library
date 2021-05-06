@@ -54,7 +54,7 @@ void loop()
   //  This function is handy for test loops where you might need to check if the previous button press has completed
   //    before responding to a new one
   
-  
+
   //Is user pressing the Program & Test (PreTest) button right now?
   if (FJ2.isProgramAndTestPressed() == true)
   {

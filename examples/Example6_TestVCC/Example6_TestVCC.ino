@@ -18,7 +18,7 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test VCC example");
 
-  FJ2.enableDebugging(); //Enable helpful debug messages on Serial
+  //FJ2.enableDebugging(); //Enable helpful debug messages on Serial
 
   //We told the FJ2 library that we expect VCC to be 3.3V when we instantiated FJ2
   //We can check that VCC really is 3.3V by calling testVCC()
@@ -39,13 +39,13 @@ void setup()
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
 
-  if(FJ2.isV1Shorted() == false)
+  if(FJ2.isV1Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V1");
     while(1); // Do nothing more
   }
 
-  if(FJ2.isV2Shorted() == false)
+  if(FJ2.isV2Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V2");
     while(1); // Do nothing more
@@ -54,8 +54,8 @@ void setup()
   Serial.println("No shorts detected!");
 
   //Now power up the target
-  FJ2.enableV1(); //Turn on V1
-  FJ2.enableV2(); //Turn on V2
+  //FJ2.enableV1(); //Turn on V1
+  //FJ2.enableV2(); //Turn on V2
 }
 
 void loop()

@@ -30,7 +30,7 @@ void setup()
 
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
 
-  if(FJ2.isV1Shorted() == false)
+  if(FJ2.isV1Shorted() == true)
   {
     Serial.println("Whoa! Short on power rail V1");
     while(1); // Do nothing more

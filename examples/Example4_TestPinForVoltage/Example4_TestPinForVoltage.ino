@@ -27,13 +27,13 @@ void setup()
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
 
-  if(FJ2.isV1Shorted() == false)
+  if(FJ2.isV1Shorted() == true)
   {
     Serial.println("Whoa! Short on power rail V1");
     while(1); // Do nothing more
   }
 
-  if(FJ2.isV2Shorted() == false)
+  if(FJ2.isV2Shorted() == true)
   {
     Serial.println("Whoa! Short on power rail V2");
     while(1); // Do nothing more
@@ -48,21 +48,11 @@ void setup()
 
 void loop()
 {
-  boolean result1 = FJ2.verifyVoltage(A0, 3.3); //Test to see if pin A0 is at 3.3V
-  
-  if(result1 == true)
-  {
-    Serial.println("Pin is at 3.3V!");
-  }
-  else
-  {
-    Serial.println("Pin is NOT at 3.3V!");
-  }
-
   //This demonstrates the extended call to the function
-  boolean result2 = FJ2.verifyVoltage(A0, 3.3, 10); //A0, 3.3V, within 10%
+  //You can omit the tolerance is you want to
+  boolean result = FJ2.verifyVoltage(A0, 3.3, 15); //A0, 3.3V, within 15%
   
-  if(result2 == true)
+  if(result == true)
   {
     Serial.println("Pin is at 3.3V!");
   }

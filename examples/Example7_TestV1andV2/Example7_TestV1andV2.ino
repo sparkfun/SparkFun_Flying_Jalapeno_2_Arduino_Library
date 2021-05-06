@@ -18,7 +18,7 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test V1 and V2 example");
 
-  FJ2.enableDebugging(); // Enable helpful debug messages on Serial
+  //FJ2.enableDebugging(); // Enable helpful debug messages on Serial
 
   if(FJ2.testVCC() == false)
   {
@@ -34,13 +34,13 @@ void setup()
   FJ2.setVoltageV1(3.3); //Get ready to set V1 to 3.3V
   FJ2.setVoltageV2(3.3); //Get ready to set V2 to 3.3V
 
-  if(FJ2.isV1Shorted() == false)
+  if(FJ2.isV1Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V1");
     while(1); // Do nothing more
   }
 
-  if(FJ2.isV2Shorted() == false)
+  if(FJ2.isV2Shorted() == true)
   {
     Serial.println("Whoa! Short detected on power rail V2");
     while(1); // Do nothing more
@@ -56,6 +56,9 @@ void setup()
   //But what if there is a heavy active load on V1 or V2? Or a fault in the FJ2 MicroPower section?
   //testVoltage will tell us if V1/V2 are OK (based on what we expect them to be from setVoltageV1/setVoltageV2)
   //testVoltage returns true if the voltage is OK
+  //
+  //Note: due to the 10k/11k divider on the PT_READ pins, we can only verify voltages which are lower than VCC * 0.9
+  //
   if(FJ2.testVoltage(1) == false) // Test V1
   {
     Serial.println("Whoa! V1 is out of bounds");
