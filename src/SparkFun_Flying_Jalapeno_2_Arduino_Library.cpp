@@ -11,9 +11,13 @@
 
 // ***** FJ2 Buttons *****
 
+//CapacitiveSensor(byte sendPin, byte receivePin)
+//The receive pin is the one connected directly to the touch pad
+//The send pin is connected to the pad via the large resistor
+//So on FJ2, the CS_RETURN pin is actually the send pin
 //Note: CapacitiveSensor::CapacitiveSensor configures the send pin as an output and pulls it low
-CapacitiveSensor FJ2button1 = CapacitiveSensor(FJ2_CAP_SENSE_BUTTON_1, FJ2_CAP_SENSE_RETURN);
-CapacitiveSensor FJ2button2 = CapacitiveSensor(FJ2_CAP_SENSE_BUTTON_2, FJ2_CAP_SENSE_RETURN);
+CapacitiveSensor FJ2button1 = CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_1);
+CapacitiveSensor FJ2button2 = CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_2);
 
 
 // ***** The FJ2 Class *****
@@ -55,6 +59,11 @@ void FlyingJalapeno2::disableDebugging()
 //This function also calls userReset. userReset can be overwritten by the user.
 //The user can add any board-specific reset functionality into their own userReset.
 //E.g. setting other FJ2 pins back to their default state.
+//
+//The only pins we don't touch in here are the SPI pins. Very bad things happen to SdFat in particular if you
+//change FJ2_TARGET_CS to an INPUT after the microSD has been begun (even though the microSD uses FJ2_MICROSD_CS).
+//There is a cryptic note about this in the Arduino SD documentation: https://www.arduino.cc/en/reference/SD
+//"Note that even if you don't use the hardware SS pin, it must be left as an output or the SD library won't work."
 void FlyingJalapeno2::reset(boolean resetLEDs)
 {
 
@@ -103,10 +112,6 @@ void FlyingJalapeno2::reset(boolean resetLEDs)
   pinMode(FJ2_PT_READ_V1, INPUT);
   pinMode(FJ2_PT_READ_V2, INPUT);
 
-  //Prepare to deselect the SPI target (once the power is enabled)
-  digitalWrite(FJ2_TARGET_CS, HIGH);
-  pinMode(FJ2_TARGET_CS, INPUT);
-
   //We do not need to worry about the SPI pins providing parasitic power to the board under test
   //The SPI buffer prevents that as soon as FJ2_SPI_EN is low
 
@@ -120,16 +125,18 @@ void FlyingJalapeno2::reset(boolean resetLEDs)
   pinMode(FJ2_SPI_EN, OUTPUT);
   digitalWrite(FJ2_MICROSD_EN, LOW); // Make sure the microSD buffer is disabled by pulling FJ2_MICROSD_EN low
   pinMode(FJ2_MICROSD_EN, OUTPUT);
-  digitalWrite(FJ2_MICROSD_CS, HIGH);
+  digitalWrite(FJ2_MICROSD_CS, HIGH); // Get ready to deselect the microSD card
   pinMode(FJ2_MICROSD_CS, INPUT);
 
   // Call userReset - which can be overwritten by the user
 
   userReset(resetLEDs); // Do any board-specific resety stuff in userReset
 }
-void FlyingJalapeno2::userReset(boolean resetLEDs) // Declared __attribute__((weak)) in the header file so the user can overwrite it
+void FlyingJalapeno2::userReset(boolean resetLEDs) // Declared __attribute__((weak)) in the header file so the user can overwrite it. YOU CAN IGNORE THE COMPILER WARNING: unused parameter 'resetLEDs'
 {
-  ; // Do not use Serial prints here as Serial will not have been begun at this point
+  // Do not use Serial prints here as Serial will not have been begun at this point
+
+  // You will see a compiler warning saying resetLEDs is unused... Just roll with it...
 }
 
 //Returns true if value is over threshold
@@ -145,6 +152,11 @@ boolean FlyingJalapeno2::isButton1Pressed(long threshold)
 boolean FlyingJalapeno2::isPretestPressed(long threshold)
 {
   long preTestButton = FJ2button1.capacitiveSensor(30);
+  // if (_printDebug == true)
+  // {
+  //   _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
+  //   _debugSerial->println(preTestButton);
+  // }
   if(preTestButton > threshold) return(true);
   return(false);	
 }
@@ -158,6 +170,11 @@ boolean FlyingJalapeno2::isButton2Pressed(long threshold)
 boolean FlyingJalapeno2::isTestPressed(long threshold)
 {
   long testButton = FJ2button2.capacitiveSensor(30);
+  // if (_printDebug == true)
+  // {
+  //   _debugSerial->print(F("FlyingJalapeno2::isTestPressed: FJ2button2.capacitiveSensor returned "));
+  //   _debugSerial->println(testButton);
+  // }
   if(testButton > threshold) return(true);
   return(false);
 }
@@ -186,7 +203,7 @@ int FlyingJalapeno2::waitForButtonPress(unsigned long timeoutMillis, unsigned lo
   boolean keepGoing = true; // keepGoing if true
   boolean timedOut = false; // Indicate if we timed out
   int result = 0; // Return: 0 = no button; 1 = button 1; 2 = button 2
-  unsigned long latestButtonPress; // Record the time of the latest button press
+  unsigned long latestButtonPress = 0; // Record the time of the latest button press
 
   while (keepGoing)
   {
@@ -597,39 +614,18 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
   digitalWrite(FJ2_POWER_TEST_CONTROL, LOW);
   pinMode(FJ2_POWER_TEST_CONTROL, INPUT);
 
-  //FJ2_POWER_TEST_CONTROL feeds the FJ2_PT_READ via a diode and a 100K/110K resistor divider
-  //There is a 10K resistor between FJ2_PT_READ and V1/V2
-  //The diode is a BAS16J which has a forward voltage of ~0.5V at 0.1mA at 25C
-  //The ADC is 10-bit and has a full-range of 1023
+  //Actual readings taken with the FJ2:
   //
-  //If there is no load on V1/V2 and VCC is 3.3V then we expect to see:
-  //90.9% of ((3.3V - 0.5V) / 3.3V) * 1023 = 789
+  //When VCC is 3.3V:
+  //  Open circuit on V1/V2 reads 680
+  //  Short circuit on V1/V2 reads 410
+  //When VCC is 5.0V:
+  //  Open circuit on V1/V2 reads 620
+  //  Short circuit on V1/V2 reads 430
   //
-  //If there is no load on V1/V2 and VCC is 5.0V then we expect to see:
-  //90.9% of ((5.0V - 0.5V) / 5.0V) * 1023 = 837
-  //
-  //If there is a dead short on V1/V2 and VCC is 3.3V then that changes the resistor divider dramatically:
-  //10K in parallel with 100K is 9.09K
-  //The divider becomes: 9.09K / 19.09K = 47.6%
-  //
-  //If VCC is 3.3V then we expect to see:
-  //47.6% of ((3.3V - 0.5V) / 3.3V) * 1023 = 413
-  //
-  //If VCC is 5.0V then we expect to see:
-  //47.6% of ((5.0V - 0.5V) / 5.0V) * 1023 = 438
+  //So, to check for a short, we should check if reading is lower than ~550
 
-  int jumper_val;
-
-  if ((_FJ_VCC >= 3.29) && (_FJ_VCC <= 3.31)) // Is VCC supposed to be 3.3V?
-  {
-    jumper_val = 600; // Split the difference 
-  }
-  else
-  {
-    jumper_val = 640; // Split the difference 
-  }
-
-  if (reading < jumper_val)
+  if (reading < 550)
     return false; // jumper detected!!
   return true;
 }
@@ -715,10 +711,6 @@ void FlyingJalapeno2::disableV1(void)
   digitalWrite(FJ2_V1_POWER_CONTROL, LOW); // turn off the high side switch
   pinMode(FJ2_V1_POWER_CONTROL, OUTPUT);
   _V1_actual = 0.0;
-  if (_printDebug == true)
-  {
-    _debugSerial->println(F("FlyingJalapeno2::disableV1: V1 disabled!"));
-  }
 }
 
 //Enable or disable regulator #2
@@ -748,10 +740,6 @@ void FlyingJalapeno2::disableV2(void)
   digitalWrite(FJ2_V2_POWER_CONTROL, LOW); // turn off the high side switch
   pinMode(FJ2_V2_POWER_CONTROL, OUTPUT);
   _V2_actual = 0.0;
-  if (_printDebug == true)
-  {
-    _debugSerial->println(F("FlyingJalapeno2::disableV2: V2 disabled!"));
-  }
 }
 
 //Setup the first power supply to the chosen voltage level
@@ -870,6 +858,7 @@ float FlyingJalapeno2::getVoltageSettingV2()
 
 
 //Test if the voltage on V1/V2 is OK. Returns false if the voltage is out of range
+//Note: due to the 10k/11k divider on the PT_READ pins, we can only verify voltages which are lower than VCC * 0.9
 boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
 {
   //Specify the read_pin and expected voltage
@@ -879,12 +868,18 @@ boolean FlyingJalapeno2::testVoltage(byte select) // select is either "1" or "2"
   {
     read_pin = FJ2_PT_READ_V1;
     expectedVoltage = _V1_actual * 10.0 / 11.0; // Compensate for resistor divider
-    expectedVoltage *= 1.05; // Fiddle factor - from FJ2 testing
+    //If VCC is 5.0V and V1/V2 are also 5.0V, the ADC reading is ~950
+    // which converts to 4.64V. So, for 5V, the fiddle factor should be 1.02
+    //If VCC is 3.3V and V1/V2 are also 3.3V, the ADC reading is ~970
+    // which converts to 3.13V. So, for 3.3V, the fiddle factor should be 1.04
+    //Let's split the difference and use a fiddle factor of 1.03
+    expectedVoltage *= 1.03; // Fiddle factor - from FJ2 testing
   }
   else if (select == 2)
   {
     read_pin = FJ2_PT_READ_V2;
     expectedVoltage = _V2_actual * 10.0 / 11.0; // Compensate for resistor divider
+    expectedVoltage *= 1.03; // Fiddle factor - from FJ2 testing
   }
   else
   {
@@ -1009,7 +1004,7 @@ void FlyingJalapeno2::disableMicroSDBuffer()
 {
   digitalWrite(FJ2_MICROSD_EN, LOW); // Make sure the microSD buffer is disabled by pulling FJ2_MICROSD_EN low
   pinMode(FJ2_MICROSD_EN, OUTPUT);
-  digitalWrite(FJ2_MICROSD_CS, HIGH);
+  digitalWrite(FJ2_MICROSD_CS, HIGH); // Get ready to deselect the microSD
   pinMode(FJ2_MICROSD_CS, INPUT);
 }
 

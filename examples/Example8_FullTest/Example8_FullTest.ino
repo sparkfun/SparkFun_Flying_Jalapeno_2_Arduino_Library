@@ -22,7 +22,7 @@ FlyingJalapeno2 FJ2(FJ2_STAT_LED, 3.3); //Blink status msgs on STAT LED. Board s
 
 // Loop Steps - these are used by the switch/case in the main loop
 // This structure makes it easy to jump between any of the steps
-enum {
+typedef enum {
   step1,  // Step 1: check the FJ2 VCC voltage has been set to 3.3V
   getButton, // Wait for a cap button press
   step2,  // Step 2: test for a short on V1
@@ -35,7 +35,7 @@ enum {
   fail    // FAIL
 } loop_steps;
 
-int loop_step = step1; // Make sure loop_step is set to step1
+loop_steps loop_step = step1; // Make sure loop_step is set to step1
 
 bool ProgramAndTestPressed; // Record which button was pressed to start the test (true = ProgramAndTest; false = Test)
 
@@ -53,7 +53,7 @@ int interrupt_pin = A1;  // The board interrupt pin - connected to A1 on the FJ2
 // We can use it to initialize the extra FJ2 pins used on our test jig
 // It will be called automatically whenever we call FJ2.reset()
 // Do not use Serial prints in userReset as Serial may not have been begun when FJ2.reset is called during the class instantiation
-void FlyingJalapeno2::userReset(boolean resetLEDs)
+void FlyingJalapeno2::userReset(boolean resetLEDs) // YOU CAN IGNORE THE COMPILER WARNING: unused parameter 'resetLEDs'
 {
   pinMode(interrupt_pin, INPUT); // Make the FJ2 pin conected to the board's interrupt pin an input
 }
@@ -190,6 +190,8 @@ void loop()
       FJ2.setVoltageV1(3.3); // Get ready to set V1 to 3.3V
       FJ2.enableV1(); // Enable V1
 
+      //Note: due to the 10k/11k divider on the PT_READ pins, we can only verify voltages which are lower than VCC * 0.9
+      //      The next line will fail if VCC is 3.3V and V1 is 5.0V
       if (FJ2.testVoltage(1) == false) // Test V1
       {
         Serial.println(F("Step 4:  FAIL! V1 is not 3.3V. Check for shorts around <insert your debug message here>"));
@@ -223,16 +225,19 @@ void loop()
 
       FJ2.enableV2(); // Enable V2
 
-      if (FJ2.testVoltage(2) == false) // Test V2
-      {
-        Serial.println(F("Step 5:  FAIL! V2 is not correct. Check for shorts around the battery charger chip"));
-        loop_step = fail;
-      }
-      else
+      //Note: due to the 10k/11k divider on the PT_READ pins, we can only verify voltages which are lower than VCC * 0.9
+      //      The next line would fail if VCC is 3.3V and V2 is 3.7V or higher...
+      //if (FJ2.testVoltage(2) == false) // Test V2
+      //{
+      //  Serial.println(F("Step 5:  FAIL! V2 is not correct. Check for shorts around the battery charger chip"));
+      //  loop_step = fail;
+      //}
+      //else
       {
         numStep5s++; // Increment the step count
-        if (numStep5s == 10) // Have we done step5 10 times?
+        if (numStep5s >= 10) // Have we done step5 10 times?
         {
+          numStep5s = 0; // Reset the number of Step5's now
           loop_step = step6; // Move on
         }
         else
@@ -330,14 +335,14 @@ void loop()
     case fail:
     {
       Serial.println();
-      Serial.println(F("!!! TEST FAILED! !!!"));
+      Serial.println(F("*** TEST FAILED! ***")); // Do not use !!! - it crashes avrdude!
       Serial.println();
 
       failures++; // Increment the number of failures
 
-      Serial.print(F("!!! The number of failures so far is "));
+      Serial.print(F("*** The number of failures so far is "));
       Serial.print(failures);
-      Serial.println(F(" !!!"));
+      Serial.println(F(" ***"));
       Serial.println();
       Serial.println();
 

@@ -99,9 +99,9 @@ class FlyingJalapeno2
     //waitForButtonPress will return 1 or 2 if the button is held for at least minimumHoldMillis. 1 takes priority over 2 (if both are being pressed)
     //waitForButtonPressRelease will return 1 or 2 after the button has been pressed and released for minimumReleaseMillis
     //waitForButtonReleasePressRelease will only return 1 or 2 if neither button was pressed initially (when the function was called)
-    int waitForButtonPress(unsigned long timeoutMillis = 1000, unsigned long minimumHoldMillis = 100, unsigned long overrideStartMillis = 0);
-    int waitForButtonPressRelease(unsigned long timeoutMillis = 1000, unsigned long minimumHoldMillis = 100, unsigned long minimumReleaseMillis = 100, unsigned long overrideStartMillis = 0);
-    int waitForButtonReleasePressRelease(unsigned long timeoutMillis = 1000, unsigned long minimumPreReleaseMillis = 100, unsigned long minimumHoldMillis = 100, unsigned long minimumPostReleaseMillis = 100);
+    int waitForButtonPress(unsigned long timeoutMillis = 5000, unsigned long minimumHoldMillis = 50, unsigned long overrideStartMillis = 0);
+    int waitForButtonPressRelease(unsigned long timeoutMillis = 5000, unsigned long minimumHoldMillis = 50, unsigned long minimumReleaseMillis = 100, unsigned long overrideStartMillis = 0);
+    int waitForButtonReleasePressRelease(unsigned long timeoutMillis = 5000, unsigned long minimumPreReleaseMillis = 100, unsigned long minimumHoldMillis = 50, unsigned long minimumPostReleaseMillis = 100);
 
     void statOn(); //Turn the stat LED on
     void statOff();
