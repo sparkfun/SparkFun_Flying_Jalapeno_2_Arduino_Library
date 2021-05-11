@@ -152,11 +152,11 @@ boolean FlyingJalapeno2::isButton1Pressed(long threshold)
 boolean FlyingJalapeno2::isPretestPressed(long threshold)
 {
   long preTestButton = FJ2button1.capacitiveSensor(30);
-  // if (_printDebug == true)
-  // {
-  //   _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
-  //   _debugSerial->println(preTestButton);
-  // }
+  if ((_printDebug == true) && (preTestButton < 0))
+  {
+    _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
+    _debugSerial->println(preTestButton);
+  }
   if(preTestButton > threshold) return(true);
   return(false);	
 }
@@ -170,11 +170,11 @@ boolean FlyingJalapeno2::isButton2Pressed(long threshold)
 boolean FlyingJalapeno2::isTestPressed(long threshold)
 {
   long testButton = FJ2button2.capacitiveSensor(30);
-  // if (_printDebug == true)
-  // {
-  //   _debugSerial->print(F("FlyingJalapeno2::isTestPressed: FJ2button2.capacitiveSensor returned "));
-  //   _debugSerial->println(testButton);
-  // }
+  if ((_printDebug == true) && (testButton < 0))
+  {
+    _debugSerial->print(F("FlyingJalapeno2::isTestPressed: FJ2button2.capacitiveSensor returned "));
+    _debugSerial->println(testButton);
+  }
   if(testButton > threshold) return(true);
   return(false);
 }
