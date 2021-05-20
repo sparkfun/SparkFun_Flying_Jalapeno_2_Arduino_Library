@@ -18,6 +18,8 @@ enableDebugging	KEYWORD2
 disableDebugging	KEYWORD2
 reset	KEYWORD2
 userReset	KEYWORD2
+setCapSenseThreshold	KEYWORD2
+setCapSenseSamples	KEYWORD2
 isPretestPressed	KEYWORD2
 isProgramAndTestPressed	KEYWORD2
 isButton1Pressed	KEYWORD2

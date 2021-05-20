@@ -20,7 +20,7 @@ FlyingJalapeno2 FJ2(FJ2_STAT_LED, 3.3); //Blink status msgs on STAT LED. Board s
 
 #include <SdFat.h> // Needed for microSD. Click here to get the latest library: http://librarymanager/All#sdFat_exFAT
 #define SD_FAT_TYPE 1 // SD_FAT_TYPE = 0 for SdFat/File, 1 for FAT16/FAT32, 2 for exFAT, 3 for FAT16/FAT32 and exFAT.
-#define SD_CONFIG SdSpiConfig(FJ2_MICROSD_CS, SHARED_SPI, SD_SCK_MHZ(2))
+#define SD_CONFIG SdSpiConfig(FJ2_MICROSD_CS, SHARED_SPI, SD_SCK_MHZ(4)) // 4 MHz
 #if SD_FAT_TYPE == 1
 SdFat32 sd;
 File32 file;
@@ -87,6 +87,10 @@ void setup()
   Serial.println("FJ2 full test example.");
 
   //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
+
+  //FJ2.setCapSenseThreshold(2000); //Uncomment this line to set the cap sense threshold to 2000. Default is 5000
+
+  //FJ2.setCapSenseSamples(20); //Uncomment this line to set the number of cap sense samples to 20. Default is 30
 
   FJ2.reset(); // Set up the FJ2 pins. Turn everything off - including the LEDs. This will call userReset too
 }
@@ -210,6 +214,10 @@ void loop()
       Serial.println();
 
       FJ2.enableMicroSDBuffer(); //Enable the microSD buffer by pulling FJ2_MICROSD_EN high
+      delay(1);
+      //Now that the buffer is enabled, we can safely enable power for the microSD card
+      //Tests revealed a power glitch if the buffer and microSD power are enabled at the same time
+      FJ2.enableMicroSDPower(); //Enable power for the microSD card
       delay(100);
 
       boolean sdStarted = sd.begin(SD_CONFIG); // Try to begin the SD card using the correct chip select

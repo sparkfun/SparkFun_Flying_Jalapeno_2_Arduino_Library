@@ -29,6 +29,10 @@ void setup()
 
   //V2 can be set to 5, 4.2, 3.7, and 3.3V. This is handy to simulate Lipo power or charging.
   FJ2.setVoltageV2(3.3); //Set V2 to 3.3V. V2 isn't enabled until we call enableV2
+
+  //FJ2.setCapSenseThreshold(2000); //Uncomment this line to set the cap sense threshold to 2000. Default is 5000
+
+  //FJ2.setCapSenseSamples(20); //Uncomment this line to set the number of cap sense samples to 20. Default is 30
 }
 
 void loop()

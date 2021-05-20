@@ -10,6 +10,7 @@
 
 #include <Wire.h>
 
+#include <CapacitiveSensor.h> //Click here to get the library: http://librarymanager/All#CapacitiveSensor_Arduino
 
 // ***** FJ2 Pin Definitions *****
 
@@ -83,12 +84,23 @@ class FlyingJalapeno2
 
     void reset(boolean resetLEDs = true); //Reset the FJ2. Turn everything off. Also calls userReset
     void userReset(boolean resetLEDs = true) __attribute__((weak)); //The user can overwrite this with a custom reset function for the board being tested
+
+    // ***** FJ2 Buttons *****
+    CapacitiveSensor *FJ2button1;
+    CapacitiveSensor *FJ2button2;
+
+    long _capSenseThreshold = 5000; // The user can change the default threshold by calling setCapSenseThreshold
+    void setCapSenseThreshold(long threshold = 5000); //Allow the user to override the default cap sense threshold
+
+    uint8_t _capSenseSamples = 30; // The user can change the number of samples by calling setCapSenseSamples
+    void setCapSenseSamples(uint8_t samples = 30); //Allow the user to override the number of cap sense samples
 	
-    boolean isPretestPressed(long threshold = 5000); //Returns true if cap sense button 1 is being pressed
-    boolean isProgramAndTestPressed(long threshold = 5000); //Helper function: calls isPretestPressed
-    boolean isButton1Pressed(long threshold = 5000); //Helper function: calls isPretestPressed
-    boolean isTestPressed(long threshold = 5000); //Returns true if cap sense button 2 is being pressed
-    boolean isButton2Pressed(long threshold = 5000); //Helper function: calls isTestPressed
+    boolean isPretestPressed(long threshold = 0); //Returns true if cap sense button 1 is being pressed. _capSenseThreshold is used if threshold is 0
+    boolean isProgramAndTestPressed(long threshold = 0); //Helper function: calls isPretestPressed. _capSenseThreshold is used if threshold is 0
+    boolean isButton1Pressed(long threshold = 0); //Helper function: calls isPretestPressed. _capSenseThreshold is used if threshold is 0
+
+    boolean isTestPressed(long threshold = 0); //Returns true if cap sense button 2 is being pressed. _capSenseThreshold is used if threshold is 0
+    boolean isButton2Pressed(long threshold = 0); //Helper function: calls isTestPressed. _capSenseThreshold is used if threshold is 0
     
     //Blocking wait-for-a-button-press functions
     //These functions return:

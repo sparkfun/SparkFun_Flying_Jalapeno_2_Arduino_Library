@@ -7,19 +7,6 @@
 
 #include "SparkFun_Flying_Jalapeno_2_Arduino_Library.h"
 
-#include <CapacitiveSensor.h> //Click here to get the library: http://librarymanager/All#CapacitiveSensor_Arduino
-
-// ***** FJ2 Buttons *****
-
-//CapacitiveSensor(byte sendPin, byte receivePin)
-//The receive pin is the one connected directly to the touch pad
-//The send pin is connected to the pad via the large resistor
-//So on FJ2, the CS_RETURN pin is actually the send pin
-//Note: CapacitiveSensor::CapacitiveSensor configures the send pin as an output and pulls it low
-CapacitiveSensor FJ2button1 = CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_1);
-CapacitiveSensor FJ2button2 = CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_2);
-
-
 // ***** The FJ2 Class *****
 
 
@@ -28,6 +15,17 @@ FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC)
 {
   _statLED = statLED;
   _FJ_VCC = FJ_VCC;
+
+
+  // ***** FJ2 Buttons *****
+  //CapacitiveSensor(byte sendPin, byte receivePin)
+  //The receive pin is the one connected directly to the touch pad
+  //The send pin is connected to the pad via the large resistor
+  //So on FJ2, the CS_RETURN pin is actually the send pin
+  //Note: CapacitiveSensor::CapacitiveSensor configures the send pin as an output and pulls it low
+  FJ2button1 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_1);
+  FJ2button2 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_2);
+
 
   reset(); // Reset everything
 
@@ -141,8 +139,22 @@ void FlyingJalapeno2::userReset(boolean resetLEDs) // Declared __attribute__((we
   // You will see a compiler warning saying resetLEDs is unused... Just roll with it...
 }
 
+//Allow the user to override the default cap sense threshold
+void FlyingJalapeno2::setCapSenseThreshold(long threshold)
+{
+  if (threshold > 0) // threshold must be greater than zero. Typical value is 5000
+    _capSenseThreshold = threshold;
+}
+
+//Allow the user to override the default cap sense samples
+void FlyingJalapeno2::setCapSenseSamples(uint8_t samples)
+{
+  if (samples > 0) // samples must be greater than zero. Typical value is 30
+    _capSenseSamples = samples;
+}
+
 //Returns true if value is over threshold
-//Threshold is optional. 5000 is default
+//Threshold is optional. _capSenseThreshold will be used if threshold is not provided (zero)
 boolean FlyingJalapeno2::isProgramAndTestPressed(long threshold)
 {
   return(isPretestPressed(threshold));	
@@ -153,31 +165,33 @@ boolean FlyingJalapeno2::isButton1Pressed(long threshold)
 }
 boolean FlyingJalapeno2::isPretestPressed(long threshold)
 {
-  long preTestButton = FJ2button1.capacitiveSensor(30);
+  long preTestButton = FJ2button1->capacitiveSensor(_capSenseSamples);
   if ((_printDebug == true) && (preTestButton < 0))
   {
     _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
     _debugSerial->println(preTestButton);
   }
-  if(preTestButton > threshold) return(true);
+  if (threshold == 0) threshold = _capSenseThreshold;
+  if (preTestButton > threshold) return(true);
   return(false);	
 }
 
 //Returns true if value is over threshold
-//Threshold is optional. 5000 is default
+//Threshold is optional. _capSenseThreshold will be used if threshold is not provided (zero)
 boolean FlyingJalapeno2::isButton2Pressed(long threshold)
 {
   return(isTestPressed(threshold));	
 }
 boolean FlyingJalapeno2::isTestPressed(long threshold)
 {
-  long testButton = FJ2button2.capacitiveSensor(30);
+  long testButton = FJ2button2->capacitiveSensor(_capSenseSamples);
   if ((_printDebug == true) && (testButton < 0))
   {
     _debugSerial->print(F("FlyingJalapeno2::isTestPressed: FJ2button2.capacitiveSensor returned "));
     _debugSerial->println(testButton);
   }
-  if(testButton > threshold) return(true);
+  if (threshold == 0) threshold = _capSenseThreshold;
+  if (testButton > threshold) return(true);
   return(false);
 }
 

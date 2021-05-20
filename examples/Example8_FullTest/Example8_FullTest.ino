@@ -68,6 +68,10 @@ void setup()
 
   //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
 
+  //FJ2.setCapSenseThreshold(2000); //Uncomment this line to set the cap sense threshold to 2000. Default is 5000
+
+  //FJ2.setCapSenseSamples(20); //Uncomment this line to set the number of cap sense samples to 20. Default is 30
+
   FJ2.reset(); // Set up the FJ2 pins. Turn everything off - including the LEDs. This will call userReset too
 }
 
