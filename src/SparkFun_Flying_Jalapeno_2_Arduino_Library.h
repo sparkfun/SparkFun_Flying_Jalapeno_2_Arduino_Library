@@ -60,7 +60,7 @@
 #define FJ2_I2C_EN 22 // 74LVC4066 I2C buffer enable
 #define FJ2_SERIAL_EN 23 // 74LVC4066 Serial buffer enable
 #define FJ2_SPI_EN 24 // 74LVC4066 SPI buffer enable
-#define FJ2_MICROSD_PWR_EN 30 // 74LVC4066 microSD power enable
+#define FJ2_MICROSD_PWR_EN 30 // microSD power enable (power is switched by a small P-MOSFET)
 #define FJ2_MICROSD_EN 47 // 74LVC4066 microSD buffer enable
 #define FJ2_MICROSD_CS 49 // 74LVC4066 SPI buffer enable
 
