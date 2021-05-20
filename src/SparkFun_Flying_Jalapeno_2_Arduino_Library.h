@@ -59,6 +59,7 @@
 #define FJ2_I2C_EN 22 // 74LVC4066 I2C buffer enable
 #define FJ2_SERIAL_EN 23 // 74LVC4066 Serial buffer enable
 #define FJ2_SPI_EN 24 // 74LVC4066 SPI buffer enable
+#define FJ2_MICROSD_PWR_EN 30 // 74LVC4066 microSD power enable
 #define FJ2_MICROSD_EN 47 // 74LVC4066 microSD buffer enable
 #define FJ2_MICROSD_CS 49 // 74LVC4066 SPI buffer enable
 
@@ -144,6 +145,8 @@ class FlyingJalapeno2
     void disableSPIBuffer(); //Disable the SPI buffer by pulling FJ2_SPI_EN low
     void enableMicroSDBuffer(); //Enable the microSD buffer by pulling FJ2_MICROSD_EN high
     void disableMicroSDBuffer(); //Disable the microSD buffer by pulling FJ2_MICROSD_EN low
+    void enableMicroSDPower(); //Enable the microSD power by pulling FJ2_MICROSD_PWR_EN high
+    void disableMicroSDPower(); //Disable the microSD power by pulling FJ2_MICROSD_PWR_EN low
 
     boolean verifyI2Cdevice(byte address = 0); // If address is zero, do a full scan
 

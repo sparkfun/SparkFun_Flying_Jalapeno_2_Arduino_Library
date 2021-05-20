@@ -55,6 +55,8 @@ enableSPIBuffer	KEYWORD2
 disableSPIBuffer	KEYWORD2
 enableMicroSDBuffer	KEYWORD2
 disableMicroSDBuffer	KEYWORD2
+enableMicroSDPower	KEYWORD2
+disableMicroSDPower	KEYWORD2
 verifyI2Cdevice	KEYWORD2
 
 #######################################

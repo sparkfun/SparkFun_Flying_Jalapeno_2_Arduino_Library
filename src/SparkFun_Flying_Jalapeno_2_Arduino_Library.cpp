@@ -123,6 +123,8 @@ void FlyingJalapeno2::reset(boolean resetLEDs)
   pinMode(FJ2_SERIAL_EN, OUTPUT);
   digitalWrite(FJ2_SPI_EN, LOW); // Make sure the SPI buffer is disabled by pulling FJ2_SPI_EN low
   pinMode(FJ2_SPI_EN, OUTPUT);
+  digitalWrite(FJ2_MICROSD_PWR_EN, LOW); // Make sure the microSD power is disabled by pulling FJ2_MICROSD_PWR_EN low
+  pinMode(FJ2_MICROSD_PWR_EN, OUTPUT);
   digitalWrite(FJ2_MICROSD_EN, LOW); // Make sure the microSD buffer is disabled by pulling FJ2_MICROSD_EN low
   pinMode(FJ2_MICROSD_EN, OUTPUT);
   digitalWrite(FJ2_MICROSD_CS, HIGH); // Get ready to deselect the microSD card
@@ -1006,6 +1008,19 @@ void FlyingJalapeno2::disableMicroSDBuffer()
   pinMode(FJ2_MICROSD_EN, OUTPUT);
   digitalWrite(FJ2_MICROSD_CS, HIGH); // Get ready to deselect the microSD
   pinMode(FJ2_MICROSD_CS, INPUT);
+}
+
+//Enable the microSD power by pulling FJ2_MICROSD_PWR_EN high
+void FlyingJalapeno2::enableMicroSDPower()
+{
+  pinMode(FJ2_MICROSD_PWR_EN, OUTPUT); // Pull FJ2_MICROSD_PWR_EN high
+  digitalWrite(FJ2_MICROSD_PWR_EN, HIGH);
+}
+//Disable the microSD power by pulling FJ2_MICROSD_PWR_EN low
+void FlyingJalapeno2::disableMicroSDPower()
+{
+  digitalWrite(FJ2_MICROSD_PWR_EN, LOW); // Make sure the microSD power is disabled by pulling FJ2_MICROSD_PWR_EN low
+  pinMode(FJ2_MICROSD_PWR_EN, OUTPUT);
 }
 
 //Verify the address of an I2C device
