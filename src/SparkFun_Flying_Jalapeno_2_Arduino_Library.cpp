@@ -533,7 +533,7 @@ boolean FlyingJalapeno2::PreTest_Custom(byte control_pin, byte read_pin)
 
   digitalWrite(control_pin, HIGH);
   delay(200);
-  int reading = analogRead(read_pin);
+  int reading = averagedAnalogRead(read_pin);
 
   if (_printDebug == true)
   {
@@ -558,7 +558,7 @@ boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin)
 
   digitalWrite(control_pin, HIGH);
   delay(200);
-  int reading = analogRead(read_pin);
+  int reading = averagedAnalogRead(read_pin);
 
   if (_printDebug == true)
   {
@@ -618,7 +618,7 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
 
   delay(200); //Wait for voltage to settle before taking a ADC reading
 
-  int reading = analogRead(read_pin);
+  int reading = averagedAnalogRead(read_pin);
 
   if (_printDebug == true)
   {
@@ -646,12 +646,29 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
   return true;
 }
 
+//Set the number of analog reads to average
+void FlyingJalapeno2::setAnalogReadSamples(long samples)
+{
+  _numAnalogSamples = samples;
+}
+
+//Average the analog reading to minimise noise
+int FlyingJalapeno2::averagedAnalogRead(byte analogPin)
+{
+  long runningTotal = 0;
+  for (long i = 0; i < _numAnalogSamples; i++)
+  {
+    runningTotal += analogRead(analogPin);
+    delay(1);
+  }
+  return ((int)(runningTotal / _numAnalogSamples));
+}
+
 //Test a pin to see what voltage is on the pin.
 //Returns true if pin voltage is within a given window of the value we are looking for
 //pin = pin to test
 //expectedVoltage = voltage we expect. 0.0 to 5.0 (float)
 //allowedPercent = allowed window for overage. 0 to 100 (int) (default 10%)
-//debug = print debug statements (default false)
 boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allowedPercent)
 {
   //float allowanceFraction = map(allowedPercent, 0, 100, 0, 1.0); //Scale int to a fraction of 1.0
@@ -663,7 +680,7 @@ boolean FlyingJalapeno2::verifyVoltage(int pin, float expectedVoltage, int allow
 
   delay(200); //Wait for voltage to settle before taking a ADC reading
 
-  int reading = analogRead(pin);
+  int reading = averagedAnalogRead(pin);
 
   //Convert reading to voltage
   float readVoltage = _FJ_VCC / 1023 * reading;
@@ -927,7 +944,7 @@ boolean FlyingJalapeno2::testVCC()
   //If VCC is 3.3V, the signal on A0 will be close to full range
   //If VCC is 5V, the signal on A0 will be (roughly) 3.3V/5V * 1023 = 675
 
-  int val = analogRead(FJ2_BRAIN_VCC_A0);
+  int val = averagedAnalogRead(FJ2_BRAIN_VCC_A0);
 
   if (_printDebug == true)
   {

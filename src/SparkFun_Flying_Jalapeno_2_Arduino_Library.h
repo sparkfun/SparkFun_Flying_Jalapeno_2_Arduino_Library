@@ -89,8 +89,8 @@ class FlyingJalapeno2
     CapacitiveSensor *FJ2button1;
     CapacitiveSensor *FJ2button2;
 
-    long _capSenseThreshold = 5000; // The user can change the default threshold by calling setCapSenseThreshold
-    void setCapSenseThreshold(long threshold = 5000); //Allow the user to override the default cap sense threshold
+    long _capSenseThreshold = 2000; // The user can change the default threshold by calling setCapSenseThreshold
+    void setCapSenseThreshold(long threshold = 2000); //Allow the user to override the default cap sense threshold
 
     uint8_t _capSenseSamples = 30; // The user can change the number of samples by calling setCapSenseSamples
     void setCapSenseSamples(uint8_t samples = 30); //Allow the user to override the number of cap sense samples
@@ -118,6 +118,10 @@ class FlyingJalapeno2
 
     void statOn(); //Turn the stat LED on
     void statOff();
+
+    long _numAnalogSamples = 25; //The user can change this by calling setAnalogReadSamples
+    void setAnalogReadSamples(long samples = 25); //Set the number of analog reads to average
+    int averagedAnalogRead(byte analogPin); //Average the analog reading to minimise noise
 
     //Returns true if pin voltage is within a given window of the value we are looking for
     boolean verifyVoltage(int pin, float expectedVoltage, int allowedPercent = 10); 

@@ -30,6 +30,8 @@ waitForButtonPressRelease	KEYWORD2
 waitForButtonReleasePressRelease	KEYWORD2
 statOn	KEYWORD2
 statOff	KEYWORD2
+setAnalogReadSamples	KEYWORD2
+averagedAnalogRead	KEYWORD2
 verifyVoltage	KEYWORD2
 verifyValue	KEYWORD2
 PreTest_Custom	KEYWORD2

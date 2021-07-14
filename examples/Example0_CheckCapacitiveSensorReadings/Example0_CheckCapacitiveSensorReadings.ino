@@ -29,8 +29,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Reading the values from the cap sense buttons");
   Serial.println();
-  Serial.println("In your test script, you can call FJ2.setCapSenseThreshold to set the button threshold. The default is 5000");
-  Serial.println("E.g. calling FJ2.setCapSenseThreshold(2000); will set the threshold to 2000");
+  Serial.println("In your test script, you can call FJ2.setCapSenseThreshold to set the button threshold. The default is 2000");
+  Serial.println("E.g. calling FJ2.setCapSenseThreshold(1000); will set the threshold to 1000");
   Serial.println();
   Serial.println("You can also call FJ2.setCapSenseSamples to set the number of samples taken when reading the button. The default is 30");
   Serial.println("E.g. calling FJ2.setCapSenseSamples(20); will set the number of samples to 20");

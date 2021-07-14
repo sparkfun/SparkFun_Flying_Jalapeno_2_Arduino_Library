@@ -18,7 +18,13 @@ void setup()
   Serial.begin(115200);
   Serial.println("Test VCC example");
 
-  //FJ2.enableDebugging(); //Enable helpful debug messages on Serial
+  //FJ2.enableDebugging(); //Uncomment this line to enable helpful debug messages on Serial
+
+  //FJ2.setCapSenseThreshold(1000); //Uncomment this line to set the cap sense threshold to 1000. Default is 2000
+
+  //FJ2.setCapSenseSamples(20); //Uncomment this line to set the number of cap sense samples to 20. Default is 30
+
+  //FJ2.setAnalogReadSamples(50); //Uncomment this line to set the number of analog reads for averaging. Default is 25
 
   //We told the FJ2 library that we expect VCC to be 3.3V when we instantiated FJ2
   //We can check that VCC really is 3.3V by calling testVCC()
