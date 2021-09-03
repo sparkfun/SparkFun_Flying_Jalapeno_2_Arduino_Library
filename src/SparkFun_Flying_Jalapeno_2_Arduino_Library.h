@@ -130,8 +130,8 @@ class FlyingJalapeno2
 
     boolean PreTest_Custom(byte control_pin, byte read_pin);
     
-    boolean isV1Shorted(); //Test V1 for shorts. Returns true if short detected.
-    boolean isV2Shorted(); //Test V2 for shorts. Returns true if short detected.
+    boolean isV1Shorted(int shortThreshold = 550); //Test V1 for shorts. Returns true if short detected.
+    boolean isV2Shorted(int shortThreshold = 550); //Test V2 for shorts. Returns true if short detected.
     boolean isShortToGround_Custom(byte control_pin, byte read_pin); // test for a short to gnd on a custom set of pins
 
     void setVoltageV1(float voltage); //Set V1 voltage (5 or 3.3V)
@@ -178,7 +178,7 @@ class FlyingJalapeno2
     float _V1_setting = 0.0; // What V1 will be when enabled
     float _V2_setting = 0.0; // What V2 will be when enabled
 
-    boolean powerTest(byte select); //Test if V1/V2 pin is OK. Returns false if a short is detected
+    boolean powerTest(byte select, int shortThreshold = 550); //Test if V1/V2 pin is OK. Returns false if a short is detected
 };
 
 #endif

@@ -578,20 +578,20 @@ boolean FlyingJalapeno2::isShortToGround_Custom(byte control_pin, byte read_pin)
 
 //Test power circuit to see if there is a short on the target
 //Returns true if there is a short
-boolean FlyingJalapeno2::isV1Shorted()
+boolean FlyingJalapeno2::isV1Shorted(int shortThreshold)
 {
-  return (powerTest(1) == false); // Test V1
+  return (powerTest(1, shortThreshold) == false); // Test V1
 }
 
-boolean FlyingJalapeno2::isV2Shorted()
+boolean FlyingJalapeno2::isV2Shorted(int shortThreshold)
 {
-  return (powerTest(2) == false); // Test V2
+  return (powerTest(2, shortThreshold) == false); // Test V2
 }
 
 //PRIVATE: Test target board for shorts to GND
 //Called by isV1Shorted() and isV2Shorted()
 //Returns true if all is good, returns false if there is short detected
-boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
+boolean FlyingJalapeno2::powerTest(byte select, int shortThreshold) // select is either "1" or "2"
 {
   //Power down regulators
   disableV1();
@@ -641,7 +641,7 @@ boolean FlyingJalapeno2::powerTest(byte select) // select is either "1" or "2"
   //
   //So, to check for a short, we should check if reading is lower than ~550
 
-  if (reading < 550)
+  if (reading < shortThreshold)
     return false; // jumper detected!!
   return true;
 }
