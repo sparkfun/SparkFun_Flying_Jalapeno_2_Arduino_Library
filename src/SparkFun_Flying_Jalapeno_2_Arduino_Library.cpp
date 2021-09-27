@@ -11,11 +11,11 @@
 
 
 //Given a pin, use that pin to blink error messages
-FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC)
+FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC, bool useCapSense)
 {
   _statLED = statLED;
   _FJ_VCC = FJ_VCC;
-
+  _useCapSense = useCapSense;
 
   // ***** FJ2 Buttons *****
   //CapacitiveSensor(byte sendPin, byte receivePin)
@@ -23,9 +23,11 @@ FlyingJalapeno2::FlyingJalapeno2(int statLED, float FJ_VCC)
   //The send pin is connected to the pad via the large resistor
   //So on FJ2, the CS_RETURN pin is actually the send pin
   //Note: CapacitiveSensor::CapacitiveSensor configures the send pin as an output and pulls it low
-  FJ2button1 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_1);
-  FJ2button2 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_2);
-
+  if (_useCapSense)
+  {
+    FJ2button1 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_1);
+    FJ2button2 = new CapacitiveSensor(FJ2_CAP_SENSE_RETURN, FJ2_CAP_SENSE_BUTTON_2);
+  }
 
   reset(); // Reset everything
 
@@ -128,6 +130,17 @@ void FlyingJalapeno2::reset(boolean resetLEDs)
   digitalWrite(FJ2_MICROSD_CS, HIGH); // Get ready to deselect the microSD card
   pinMode(FJ2_MICROSD_CS, INPUT);
 
+  // If _useCapSense is false, configure the cap sense pins as inputs
+  // (Don't use INPUT_PULLUP or you'll see the 15us HeatBeat pulses)
+  // (Pull CAP_SENSE_RETURN low to avoid it acting as a pull-up)
+  if (!_useCapSense)
+  {
+    pinMode(FJ2_CAP_SENSE_BUTTON_1, INPUT);
+    pinMode(FJ2_CAP_SENSE_BUTTON_2, INPUT);
+    pinMode(FJ2_CAP_SENSE_RETURN, OUTPUT);
+    digitalWrite(FJ2_CAP_SENSE_RETURN, LOW);
+  }
+
   // Call userReset - which can be overwritten by the user
 
   userReset(resetLEDs); // Do any board-specific resety stuff in userReset
@@ -165,15 +178,32 @@ boolean FlyingJalapeno2::isButton1Pressed(long threshold)
 }
 boolean FlyingJalapeno2::isPretestPressed(long threshold)
 {
-  long preTestButton = FJ2button1->capacitiveSensor(_capSenseSamples);
-  if ((_printDebug == true) && (preTestButton < 0))
+  if (_useCapSense)
   {
-    _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
-    _debugSerial->println(preTestButton);
+    long preTestButton = FJ2button1->capacitiveSensor(_capSenseSamples);
+    if ((_printDebug == true) && (preTestButton < 0))
+    {
+      _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button1.capacitiveSensor returned "));
+      _debugSerial->println(preTestButton);
+    }
+    if (threshold == 0) threshold = _capSenseThreshold;
+    if (preTestButton > threshold)
+      return(true);
+    return(false);
   }
-  if (threshold == 0) threshold = _capSenseThreshold;
-  if (preTestButton > threshold) return(true);
-  return(false);	
+  else
+  {
+    // Check that the button signal is high for > 15us (just in case the AT42QT1011 HeartBeat is detected)
+    // Take six samples five microseconds apart. Return true if all six are high
+    int counter = 0;
+    for (int c = 0; c < 6; c++)
+    {
+      if (digitalRead(FJ2_CAP_SENSE_BUTTON_1) == HIGH)
+        counter++;
+      delayMicroseconds(5);
+    }
+    return (counter == 6);
+  }
 }
 
 //Returns true if value is over threshold
@@ -184,15 +214,32 @@ boolean FlyingJalapeno2::isButton2Pressed(long threshold)
 }
 boolean FlyingJalapeno2::isTestPressed(long threshold)
 {
-  long testButton = FJ2button2->capacitiveSensor(_capSenseSamples);
-  if ((_printDebug == true) && (testButton < 0))
+  if (_useCapSense)
   {
-    _debugSerial->print(F("FlyingJalapeno2::isTestPressed: FJ2button2.capacitiveSensor returned "));
-    _debugSerial->println(testButton);
+    long preTestButton = FJ2button2->capacitiveSensor(_capSenseSamples);
+    if ((_printDebug == true) && (preTestButton < 0))
+    {
+      _debugSerial->print(F("FlyingJalapeno2::isPretestPressed: FJ2button2.capacitiveSensor returned "));
+      _debugSerial->println(preTestButton);
+    }
+    if (threshold == 0) threshold = _capSenseThreshold;
+    if (preTestButton > threshold)
+      return(true);
+    return(false);
   }
-  if (threshold == 0) threshold = _capSenseThreshold;
-  if (testButton > threshold) return(true);
-  return(false);
+  else
+  {
+    // Check that the button signal is high for > 15us (just in case the AT42QT1011 HeartBeat is detected)
+    // Take six samples five microseconds apart. Return true if all six are high
+    int counter = 0;
+    for (int c = 0; c < 6; c++)
+    {
+      if (digitalRead(FJ2_CAP_SENSE_BUTTON_2) == HIGH)
+        counter++;
+      delayMicroseconds(5);
+    }
+    return (counter == 6);
+  }
 }
 
 //Blocking wait-for-a-button-press functions

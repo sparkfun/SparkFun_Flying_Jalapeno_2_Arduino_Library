@@ -77,7 +77,7 @@ class FlyingJalapeno2
 {
   public:
 
-    FlyingJalapeno2(int statLED, float FJ_VCC = 3.3);
+    FlyingJalapeno2(int statLED, float FJ_VCC = 3.3, bool useCapSense = true);
 
     void enableDebugging(Stream &debugPort = Serial); // Enable helpful debug messages on the chosen serial port
     void disableDebugging(); // Turn off debug messages
@@ -177,6 +177,7 @@ class FlyingJalapeno2
     float _V2_actual = 0.0; // The actual V2 voltage. Used by testVoltage
     float _V1_setting = 0.0; // What V1 will be when enabled
     float _V2_setting = 0.0; // What V2 will be when enabled
+    bool _useCapSense = true; // True: use CapacitiveSensor. False: use (e.g.) external AT42QT1011 buttons
 
     boolean powerTest(byte select, int shortThreshold = 550); //Test if V1/V2 pin is OK. Returns false if a short is detected
 };
